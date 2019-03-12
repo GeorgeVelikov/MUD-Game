@@ -100,7 +100,7 @@ public class MUD
                 String dest   = st.nextToken();
                 String msg = "";
                 while (st.hasMoreTokens()) {
-                    msg = msg + st.nextToken() + " ";
+                    msg = msg.concat(st.nextToken() + " ");
                 }
 
                 addEdge( source, dest, dir, msg );
@@ -138,7 +138,7 @@ public class MUD
                 String msg = "";
 
                 while (st.hasMoreTokens()) {
-                    msg = msg + st.nextToken() + " ";
+                    msg = msg.concat(st.nextToken() + " ");
                 }
 
                 changeMessage( loc, msg );
@@ -188,7 +188,7 @@ public class MUD
         }
     }
 
-    /**
+    /*
      * All the public stuff. These methods are designed to hide the
      * internal structure of the game.MUD. Could declare these on an
      * interface and have external objects interact with the game.MUD via
@@ -219,7 +219,7 @@ public class MUD
 
         while (iter.hasNext()) {
             loc = (String)iter.next();
-            summary = summary + "Node: " + loc;
+            summary = summary.concat("Node: " + loc);
             summary += ((Vertex)vertexMap.get( loc )).toString();
         }
 

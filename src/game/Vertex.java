@@ -17,8 +17,8 @@ class Vertex
     public Vertex( String nm )
     {
 		_name 	= nm;
-		_routes = new HashMap<String,Edge>(); // Not synchronised
-		_things = new Vector<String>();       // Synchronised
+		_routes = new HashMap<>(); // Not synchronised
+		_things = new Vector<>();       // Synchronised
     }
 
     public String toString()

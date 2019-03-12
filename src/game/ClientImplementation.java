@@ -1,12 +1,30 @@
 package game;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 
 public class ClientImplementation implements ClientInterface {
+    private ServerInterface remote;
     private String hostname;
     private String username;
     private int port;
-    ServerInterface remote;
+
+    public void setName(String name) {
+
+        this.username = name;
+    }
+
+    public void setHostname(String name) {
+
+        this.hostname = name;
+    }
+
+    public void setPort(int _port) {
+
+        this.port = _port;
+    }
 
     public void join() throws RemoteException {
         System.out.println(
@@ -20,12 +38,19 @@ public class ClientImplementation implements ClientInterface {
         );
     }
 
-    public void setName(String name) {
+    public String readInput(String msg) {
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println(msg);
 
-        this.username = name;
+        try {
+            return input.readLine();
+        }
+        catch(IOException e) {
+            return "";
+        }
     }
 
-    public ClientImplementation(String _hostname, int _port, String _username) {
+    ClientImplementation(String _hostname, int _port, String _username) {
         this.hostname = _hostname;
         this.port = _port;
         setName(_username);

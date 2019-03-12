@@ -6,11 +6,25 @@ import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class ServerImplementation implements ServerInterface {
+    private List<String> players = new ArrayList<>();
+
     public String playersOnline() {
-        return "These players are online";
+        return "These players are online: " + this.players;
+    }
+
+    public String playerJoin(String username) {
+        this.players.add(username);
+        return username + " has joined the server";
+    }
+
+    public String playerQuit(String username) {
+        this.players.remove(username);
+        return username + " has left the server";
     }
 
     private void createServer(int port_registry, int port_server) throws RemoteException {

@@ -4,9 +4,9 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+
 
 public class ServerImplementation implements ServerInterface {
     public String playersOnline() {
@@ -49,7 +49,7 @@ public class ServerImplementation implements ServerInterface {
 
     }
 
-    public ServerImplementation(int port_registry, int port_server) throws RemoteException {
+    ServerImplementation(int port_registry, int port_server) throws RemoteException {
 
         createServer(port_registry, port_server);
     }

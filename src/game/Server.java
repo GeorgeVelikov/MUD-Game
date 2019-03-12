@@ -13,10 +13,8 @@ public class Server {
         String messages = args[1];
         String things = args[2];
 
-        MUD mud = new MUD(edges, messages, things);
-
-
-        ServerImplementation s = new ServerImplementation(50014, 50015);
+        new MUD(edges, messages, things);
+        new ServerImplementation(50014, 50015);
         System.out.println("Server is running boye");
     }
 }

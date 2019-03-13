@@ -38,7 +38,7 @@ public class Client {
         client.connect();
 
         client.join();
-        System.out.println(client.remote.playersOnline());
+        client.checkClients();
         client.quit();
     }
 }

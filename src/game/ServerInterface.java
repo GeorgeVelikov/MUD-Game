@@ -12,6 +12,4 @@ public interface ServerInterface extends Remote {
     String playerMove(String user_loc, String user_move, String user_name) throws RemoteException;
 
     boolean playerTake(String loc, String item) throws RemoteException;
-
-    MUD getMUD() throws RemoteException;
 }

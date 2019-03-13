@@ -120,7 +120,7 @@ public class ClientImplementation implements ClientInterface {
 
     }
 
-    private void checkInventory() throws RemoteException {
+    private void checkInventory() {
         System.out.println(
                 "Your inventory: " +
                 this.inventory

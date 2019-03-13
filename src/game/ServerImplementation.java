@@ -15,11 +15,6 @@ public class ServerImplementation implements ServerInterface {
     private String server_name;
     private MUD mud_game_map;
 
-    public MUD getMUD() {
-
-        return this.mud_game_map;
-    }
-
     public String playersOnline() {
 
         return "These players are online: " + this.players;

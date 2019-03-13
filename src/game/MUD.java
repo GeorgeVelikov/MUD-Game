@@ -216,7 +216,7 @@ public class MUD
         while (iter.hasNext()) {
             loc = (String)iter.next();
             summary = summary.concat("Node: " + loc);
-            summary += ((MUDVertex)vertexMap.get( loc )).toString();
+            summary += (vertexMap.get( loc )).toString();
         }
 
         summary += "Start location = " + _startLocation;
@@ -242,7 +242,7 @@ public class MUD
     /**
      * Add a thing to a location; used to enable us to add new users.
      */
-    public void addThing( String loc, String thing )
+    private void addThing( String loc, String thing )
     {
         MUDVertex v = getVertex( loc );
         v._things.add( thing );
@@ -251,7 +251,7 @@ public class MUD
     /**
      * Remove a thing from a location.
      */
-    public void delThing( String loc, String thing )
+    private void delThing( String loc, String thing )
     {
         MUDVertex v = getVertex( loc );
         v._things.remove( thing );
@@ -281,7 +281,12 @@ public class MUD
 
         if(items.contains(item)) {
             this.delThing(loc, item);
-            current_vertex._things.add("It seems treasures resided this place before");
+            String msg = "Evidence of a ";
+            if (item.endsWith("s")) {
+                msg = msg.replace("a ", "");
+            }
+
+            this.createThing(loc, msg + item + " residing here before");
             return true;
         }
 

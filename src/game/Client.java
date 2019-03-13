@@ -39,6 +39,7 @@ public class Client {
 
         client.join();
         client.checkClients();
+        client.play();
         client.quit();
     }
 }

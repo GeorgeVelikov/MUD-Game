@@ -1,5 +1,8 @@
 package game;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -60,7 +63,7 @@ public class ClientImplementation implements ClientInterface {
         this.port = 0; // null
     }
 
-        // TODO: put name/port in connect so that we can choose which server to connect to
+    // TODO: put name/port in connect so that we can choose which server to connect to
     public void connect() throws RemoteException {
         try {
             String url = "rmi://" + this.hostname + ":" + this.port + "/mud";
@@ -74,10 +77,34 @@ public class ClientImplementation implements ClientInterface {
         }
     }
 
-
     // game
-    public String play() throws RemoteException {
-        return "game loop";
+    public void play() throws RemoteException {
+        boolean playing = true;
+        String action;
+
+        while(playing) {
+            action = enterAction();
+
+            if (action.equals("quit"))
+                playing = false;
+        }
+    }
+
+    public void move(String direction) throws RemoteException {
+
+    }
+
+
+    private String enterAction() {
+        System.out.print(this.username + "~> ");
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+
+        try {
+            return input.readLine();
+        }
+        catch(IOException e) {
+            return enterAction();
+        }
     }
 
     ClientImplementation(String _hostname, int _port, String _username) {

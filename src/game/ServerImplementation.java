@@ -38,8 +38,6 @@ public class ServerImplementation implements ServerInterface {
         System.out.println(this.mud_game_map.toString());
     }
 
-
-
     private void createServer(int port_registry, int port_server) throws RemoteException {
         try {
             this.server_name = (InetAddress.getLocalHost()).getCanonicalHostName();

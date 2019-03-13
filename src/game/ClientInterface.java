@@ -8,5 +8,4 @@ interface ClientInterface {
     void setName(String name) throws RemoteException;
     void setHostname(String name) throws RemoteException;
     void setPort(int _port) throws RemoteException;
-    String readInput(String msg) throws RemoteException;
 }

@@ -38,18 +38,6 @@ public class ClientImplementation implements ClientInterface {
         );
     }
 
-    public String readInput(String msg) {
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println(msg);
-
-        try {
-            return input.readLine();
-        }
-        catch(IOException e) {
-            return "";
-        }
-    }
-
     ClientImplementation(String _hostname, int _port, String _username) {
         this.hostname = _hostname;
         this.port = _port;

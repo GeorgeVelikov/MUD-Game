@@ -3,6 +3,8 @@ package game;
 import java.rmi.RemoteException;
 
 public class Server {
+    // TODO: ServerManager that can have multiple servers on it
+    // TODO: User limit on server
     public static void main(String[] args) throws RemoteException {
         if (args.length != 3) {
             System.err.println("Usage: MUDServer <edgesfile> <messagesfile> <thingsfile>");

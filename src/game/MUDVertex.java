@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Vector;
 import java.util.Iterator;
 
-// Represents a location in the game.MUD (a vertex in the graph).
+// Represents a location in the game.MUD (a vertex in the graph)
 class MUDVertex
 {
     public String 					_name;             	// game.MUDVertex name
@@ -18,7 +18,7 @@ class MUDVertex
     {
 		_name 	= nm;
 		_routes = new HashMap<>(); // Not synchronised
-		_things = new Vector<>();       // Synchronised
+		_things = new Vector<>();      // Synchronised
     }
 
     public String toString()

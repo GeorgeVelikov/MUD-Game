@@ -8,6 +8,8 @@ public interface ServerInterface extends Remote {
     String playerJoin(String username) throws RemoteException;
     String playerQuit(String username) throws RemoteException;
     String playerStartLocation() throws RemoteException;
+    String playerLook(String location) throws RemoteException;
+
     void playerMove (Client player) throws RemoteException;
     MUD getMUD() throws RemoteException;
 

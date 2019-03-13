@@ -7,6 +7,8 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ClientImplementation implements ClientInterface {
     // server connected to do data
@@ -15,6 +17,7 @@ public class ClientImplementation implements ClientInterface {
     private int port;
 
     // user data
+    private boolean playing;
     private String username;
     private String location;
 
@@ -35,8 +38,14 @@ public class ClientImplementation implements ClientInterface {
         this.port = _port;
     }
 
+    private void setLocation(String loc) {
+
+        this.location = loc;
+    }
+
+
     // server operations
-    public void checkClients() throws RemoteException {
+    public void players() throws RemoteException {
         System.out.println(
                 remote.playersOnline()
         );
@@ -49,10 +58,12 @@ public class ClientImplementation implements ClientInterface {
     }
 
     public void quit() throws RemoteException {
+        this.playing = false;
 
         System.out.println(
                 remote.playerQuit(this.username)
         );
+
         this.disconnect();
     }
 
@@ -61,7 +72,6 @@ public class ClientImplementation implements ClientInterface {
         this.hostname = null;
         this.port = 0; // null
     }
-
     // TODO: put name/port in connect so that we can choose which server to connect to
     public void connect() throws RemoteException {
         try {
@@ -76,27 +86,41 @@ public class ClientImplementation implements ClientInterface {
         }
     }
 
+
     // game
     public void play() throws RemoteException {
         // game state vars
-        boolean playing = true;
+        this.playing = true;
         String action;
 
-        while(playing) {
-            this.location = this.remote.playerStartLocation();
+        // set starting loc
+        this.setLocation(remote.playerStartLocation());
 
-            action = enterAction();
+        while(this.playing) {
+            // sanitize action text
+            action = enterAction().toLowerCase();
 
-            if (action.equals("quit"))      { playing = false; this.quit(); }
-            if (action.equals("players"))   { this.checkClients(); }
-            if (action.equals("loc")) { System.out.println(this.location); }
+            if (action.equals("quit")) {
+                this.quit(); }
+            if (action.equals("players")) {
+                this.players(); }
+            if (action.equals("look")) {
+                this.look(); }
+            if (action.matches("north|west|south|east")) {
+                this.move(action); }
         }
     }
 
-    public void move(String direction) throws RemoteException {
+    private void move(String direction) throws RemoteException {
 
     }
 
+    private void look() throws RemoteException {
+        System.out.println(
+                "\nNode: " + this.location +
+                this.remote.playerLook(this.location)
+        );
+    }
 
     private String enterAction() {
         System.out.print(this.username + "~> ");

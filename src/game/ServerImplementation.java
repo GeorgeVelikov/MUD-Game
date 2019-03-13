@@ -36,7 +36,12 @@ public class ServerImplementation implements ServerInterface {
 
     public String playerStartLocation() {
 
-        return this.mud_game_map.startLocation();
+        return mud_game_map.startLocation();
+    }
+
+    public String playerLook(String location) {
+
+        return this.mud_game_map.locationInfo(location);
     }
 
     public void playerMove (Client player) {

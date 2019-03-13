@@ -3,11 +3,13 @@ package game;
 import java.rmi.RemoteException;
 
 interface ClientInterface {
-    void join() throws RemoteException;
-    void quit() throws RemoteException;
     void connect() throws RemoteException;
+    void join() throws RemoteException;
+    void play() throws RemoteException;
+    void quit() throws RemoteException;
     void disconnect() throws RemoteException;
-    void checkClients() throws RemoteException;
+
+    void players() throws RemoteException;
     void setName(String name) throws RemoteException;
     void setHostname(String name) throws RemoteException;
     void setPort(int _port) throws RemoteException;

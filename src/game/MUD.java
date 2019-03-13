@@ -18,7 +18,7 @@ public class MUD
 
     // A record of all the vertices in the game.MUD graph. HashMaps are not
     // synchronized, but we don't really need this to be synchronised.
-    private Map<String,Vertex> vertexMap = new HashMap<>();
+    private Map<String, MUDVertex> vertexMap = new HashMap<>();
 
     private String _startLocation = "";
 
@@ -30,9 +30,9 @@ public class MUD
 			  String direction, 
 			  String view )
     {
-        Vertex v = getOrCreateVertex( sourceName );
-        Vertex w = getOrCreateVertex( destName );
-        v._routes.put( direction, new Edge( w, view ) );
+        MUDVertex v = getOrCreateVertex( sourceName );
+        MUDVertex w = getOrCreateVertex( destName );
+        v._routes.put( direction, new MUDEdge( w, view ) );
     }
 
     /**
@@ -40,7 +40,7 @@ public class MUD
      */
     private void createThing( String loc, String thing )
     {
-        Vertex v = getOrCreateVertex( loc );
+        MUDVertex v = getOrCreateVertex( loc );
         v._things.add( thing );
     }
 
@@ -49,19 +49,19 @@ public class MUD
      */
     private void changeMessage( String loc, String msg )
     {
-        Vertex v = getOrCreateVertex( loc );
+        MUDVertex v = getOrCreateVertex( loc );
         v._msg = msg;
     }
 
     /**
      * If vertexName is not present, add it to vertexMap.  In either
-     * case, return the game.Vertex. Used only for creating the game.MUD.
+     * case, return the game.MUDVertex. Used only for creating the game.MUD.
      */
-    private Vertex getOrCreateVertex( String vertexName )
+    private MUDVertex getOrCreateVertex(String vertexName )
     {
-        Vertex v = vertexMap.get( vertexName );
+        MUDVertex v = vertexMap.get( vertexName );
         if (v == null) {
-            v = new Vertex( vertexName );
+            v = new MUDVertex( vertexName );
             vertexMap.put( vertexName, v );
         }
         return v;
@@ -70,7 +70,7 @@ public class MUD
     /**
      *
      */
-    private Vertex getVertex( String vertexName )
+    private MUDVertex getVertex(String vertexName )
     {
 	return vertexMap.get( vertexName );
     }
@@ -220,7 +220,7 @@ public class MUD
         while (iter.hasNext()) {
             loc = (String)iter.next();
             summary = summary.concat("Node: " + loc);
-            summary += ((Vertex)vertexMap.get( loc )).toString();
+            summary += ((MUDVertex)vertexMap.get( loc )).toString();
         }
 
         summary += "Start location = " + _startLocation;
@@ -248,7 +248,7 @@ public class MUD
      */
     public void addThing( String loc, String thing )
     {
-        Vertex v = getVertex( loc );
+        MUDVertex v = getVertex( loc );
         v._things.add( thing );
     }
 
@@ -257,7 +257,7 @@ public class MUD
      */
     public void delThing( String loc, String thing )
     {
-        Vertex v = getVertex( loc );
+        MUDVertex v = getVertex( loc );
         v._things.remove( thing );
     }
 
@@ -268,8 +268,8 @@ public class MUD
      */
     public String moveThing( String loc, String dir, String thing )
     {
-        Vertex v = getVertex( loc );
-        Edge e = v._routes.get( dir );
+        MUDVertex v = getVertex( loc );
+        MUDEdge e = v._routes.get( dir );
         if (e == null)   // if there is no route in that direction
             return loc;  // no move is made; return current location.
         v._things.remove( thing );

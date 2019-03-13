@@ -7,14 +7,14 @@ import java.util.Vector;
 import java.util.Iterator;
 
 // Represents a location in the game.MUD (a vertex in the graph).
-class Vertex
+class MUDVertex
 {
-    public String 				_name;             	// game.Vertex name
+    public String 				_name;             	// game.MUDVertex name
     public String 				_msg = "";         	// Message about this location
-    public Map<String,Edge> 	_routes; 			// Association between direction (e.g. "north") and a path (game.Edge)
+    public Map<String, MUDEdge> 	_routes; 			// Association between direction (e.g. "north") and a path (game.MUDEdge)
     public List<String> 		_things;     		// The things (e.g. players) at this location
 
-    public Vertex( String nm )
+    public MUDVertex(String nm )
     {
 		_name 	= nm;
 		_routes = new HashMap<>(); // Not synchronised
@@ -30,7 +30,7 @@ class Vertex
 
 		while (iter.hasNext()) {
 			direction = (String)iter.next();
-			summary += "To the " + direction + " there is " + ((Edge)_routes.get( direction ))._view + "\n";
+			summary += "To the " + direction + " there is " + ((MUDEdge)_routes.get( direction ))._view + "\n";
 		}
 
 		iter = _things.iterator();

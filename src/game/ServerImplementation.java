@@ -19,6 +19,7 @@ public class ServerImplementation implements ServerInterface {
     }
 
     public String playerJoin(String username) {
+        this.players.add(username);
         return username + " has joined the server";
     }
 

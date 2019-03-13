@@ -6,7 +6,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 public class ClientImplementation implements ClientInterface {
-    private ServerInterface remote;
+    ServerInterface remote;
     private String hostname;
     private String username;
     private int port;

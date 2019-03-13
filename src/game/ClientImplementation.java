@@ -33,9 +33,16 @@ public class ClientImplementation implements ClientInterface {
     }
 
     public void quit() throws RemoteException {
+        this.disconnect();
         System.out.println(
                 remote.playerQuit(this.username)
         );
+    }
+
+    public void disconnect() {
+        this.remote = null;
+        this.hostname = null;
+        this.port = 0; // null
     }
 
     // TODO: put name/port in connect so that we can choose which server to connect to

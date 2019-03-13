@@ -7,8 +7,9 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class ClientImplementation implements ClientInterface {
     // server connected to do data
@@ -20,6 +21,7 @@ public class ClientImplementation implements ClientInterface {
     private boolean playing;
     private String username;
     private String location;
+    private List<String> inventory = new ArrayList<>();
 
 
     // setters
@@ -87,38 +89,51 @@ public class ClientImplementation implements ClientInterface {
     }
 
 
-    // game
-    public void play() throws RemoteException {
-        // game state vars
-        this.playing = true;
-        String action;
-
-        // set starting loc
-        this.setLocation(remote.playerStartLocation());
-
-        while(this.playing) {
-            // sanitize action text
-            action = enterAction().toLowerCase();
-
-            if (action.equals("quit")) {
-                this.quit(); }
-            if (action.equals("players")) {
-                this.players(); }
-            if (action.equals("look")) {
-                this.look(); }
-            if (action.matches("north|west|south|east")) {
-                this.move(action); }
-        }
-    }
-
+    // game helpers & prompts for server to calculate user actions
     private void move(String direction) throws RemoteException {
+        this.setLocation(
+                remote.playerMove(this.location, direction, this.username)
+        );
 
+        System.out.print("Your new location is ");
+        this.look();
     }
 
     private void look() throws RemoteException {
         System.out.println(
-                "\nNode: " + this.location +
-                this.remote.playerLook(this.location)
+                "Node: " + this.location +
+                        this.remote.playerLook(this.location)
+        );
+    }
+
+    private void take(String item) throws RemoteException {
+        boolean item_exists = this.remote.playerTake(this.location, item);
+
+        if(item_exists) {
+            this.inventory.add(item);
+            System.out.println("You have added " + item + " to your inventory");
+            this.checkInventory();
+        }
+
+        else
+            System.out.println("I cannot find this item");
+
+    }
+
+    private void checkInventory() throws RemoteException {
+        System.out.println(
+                "Your inventory: " +
+                this.inventory
+        );
+    }
+
+    private void help() {
+        System.out.println(
+                "\t~-~-~-~-~-~-~-~-~-~> HELP <~-~-~-~-~-~-~-~-~-\n" +
+                "\t\t\t   SERVER: \tquit, players\n" +
+                "\tPLAYER OPERATIONS: \tlook, take\n" +
+                "\t\t\t MOVEMENT: \tnorth, west, south, east\n" +
+                "\t~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~\n"
         );
     }
 
@@ -134,10 +149,45 @@ public class ClientImplementation implements ClientInterface {
         }
     }
 
+
+    // game loop
+    public void play() throws RemoteException {
+        // game state vars
+        this.playing = true;
+        String action;
+
+        // set starting loc
+        this.setLocation(remote.playerStartLocation());
+
+        while(this.playing) {
+            // sanitize action text
+            action = enterAction().toLowerCase();
+
+            if (action.equals("help")) {
+                this.help(); }
+            if (action.equals("quit")) {
+                this.quit(); }
+            if (action.equals("players")) {
+                this.players(); }
+            if (action.equals("look")) {
+                this.look(); }
+            if (action.equals("inventory")) {
+                this.checkInventory(); }
+
+            if (action.startsWith("take ")) {
+                this.take(action.replace("take ", "")); }
+
+            if (action.matches("north|west|south|east")) {
+                this.move(action); }
+        }
+    }
+
+
+    // creator
     ClientImplementation(String _hostname, int _port, String _username) {
-        this.hostname = _hostname;
-        this.port = _port;
-        setName(_username);
+        this.setHostname(_hostname);
+        this.setPort(_port);
+        this.setName(_username);
 
         System.setProperty("java.security.policy", ".policy");
         System.setSecurityManager(new SecurityManager());

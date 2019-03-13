@@ -15,7 +15,13 @@ public class ServerImplementation implements ServerInterface {
     private String server_name;
     private MUD mud_game_map;
 
+    public MUD getMUD() {
+
+        return this.mud_game_map;
+    }
+
     public String playersOnline() {
+
         return "These players are online: " + this.players;
     }
 
@@ -29,11 +35,6 @@ public class ServerImplementation implements ServerInterface {
         return username + " has left the server";
     }
 
-    public MUD getMUD() {
-
-        return this.mud_game_map;
-    }
-
     public String playerStartLocation() {
 
         return mud_game_map.startLocation();
@@ -44,8 +45,13 @@ public class ServerImplementation implements ServerInterface {
         return this.mud_game_map.locationInfo(location);
     }
 
-    public void playerMove (Client player) {
-        System.out.println(this.mud_game_map.toString());
+    public String playerMove(String user_loc, String user_move, String user_name) {
+
+        return this.mud_game_map.moveThing(user_loc, user_move, user_name);
+    }
+
+    public boolean playerTake(String loc, String item) {
+        return this.mud_game_map.takeItem(loc, item);
     }
 
     private void createServer(int port_registry, int port_server) throws RemoteException {

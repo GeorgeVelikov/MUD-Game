@@ -3,11 +3,7 @@ package game;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.StringTokenizer;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 
 public class MUD
@@ -275,6 +271,22 @@ public class MUD
         v._things.remove( thing );
         e._dest._things.add( thing );
         return e._dest._name;
+    }
+
+    /* user can take item from loc */
+    public boolean takeItem(String loc, String item)
+    {
+        MUDVertex current_vertex = getVertex(loc);
+        List<String> items = current_vertex._things;
+
+        if(items.contains(item)) {
+            this.delThing(loc, item);
+            current_vertex._things.add("It seems treasures resided this place before");
+            return true;
+        }
+
+        else
+            return false;
     }
 
     /**

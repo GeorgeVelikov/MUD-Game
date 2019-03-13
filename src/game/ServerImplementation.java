@@ -14,6 +14,7 @@ public class ServerImplementation implements ServerInterface {
     private List<String> players = new ArrayList<>();
 
     public String playersOnline() {
+
         return "These players are online: " + this.players;
     }
 

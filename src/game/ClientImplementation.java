@@ -16,7 +16,7 @@ public class ClientImplementation implements ClientInterface {
 
     // user data
     private String username;
-    private String user_location;
+    private String location;
 
 
     // setters
@@ -34,7 +34,6 @@ public class ClientImplementation implements ClientInterface {
 
         this.port = _port;
     }
-
 
     // server operations
     public void checkClients() throws RemoteException {
@@ -79,14 +78,18 @@ public class ClientImplementation implements ClientInterface {
 
     // game
     public void play() throws RemoteException {
+        // game state vars
         boolean playing = true;
         String action;
 
         while(playing) {
+            this.location = this.remote.playerStartLocation();
+
             action = enterAction();
 
-            if (action.equals("quit"))
-                playing = false;
+            if (action.equals("quit"))      { playing = false; this.quit(); }
+            if (action.equals("players"))   { this.checkClients(); }
+            if (action.equals("loc")) { System.out.println(this.location); }
         }
     }
 

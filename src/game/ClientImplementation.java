@@ -1,5 +1,8 @@
 package game;
 
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 public class ClientImplementation implements ClientInterface {
@@ -35,9 +38,26 @@ public class ClientImplementation implements ClientInterface {
         );
     }
 
+    // TODO: put name/port in connect so that we can choose which server to connect to
+    public void connect() throws RemoteException {
+        try {
+            String url = "rmi://" + this.hostname + ":" + this.port + "/mud";
+            this.remote = (ServerInterface) Naming.lookup(url);
+        }
+        catch(NotBoundException e) {
+            System.err.println("Error, Server not bound: " + e.getMessage());
+        }
+        catch(MalformedURLException e) {
+            System.err.println("Error, Malformed url: " + e.getMessage());
+        }
+    }
+
     ClientImplementation(String _hostname, int _port, String _username) {
         this.hostname = _hostname;
         this.port = _port;
         setName(_username);
+
+        System.setProperty("java.security.policy", ".policy");
+        System.setSecurityManager(new SecurityManager());
     }
 }

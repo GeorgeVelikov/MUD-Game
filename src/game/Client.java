@@ -26,7 +26,7 @@ public class Client {
             hostname = args[0];
             port = Integer.parseInt(args[1]);
         }
-        catch(IllegalArgumentException e) {
+        catch(ArrayIndexOutOfBoundsException e) {
             System.err.println("Error, illegal arguments: " + e.getMessage());
         }
 
@@ -34,6 +34,8 @@ public class Client {
         String _username = enterName();
 
         ClientImplementation client = new ClientImplementation(hostname, port, _username);
+
+        client.connect();
 
         client.join();
 

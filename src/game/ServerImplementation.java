@@ -17,7 +17,11 @@ public class ServerImplementation implements ServerInterface {
     private String server_name;
     private Map<String, MUD> mud_games = new HashMap<>();
 
-    // surely there has to be a better way than this
+    /*
+     surely there has to be a better way than this,
+     this holds the current mud instance operations
+     that are being processed by the server
+    */
     private MUD current_mud;
 
     public String menu() {

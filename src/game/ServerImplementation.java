@@ -52,21 +52,19 @@ public class ServerImplementation implements ServerInterface {
         return "These players are online: " + this.players;
     }
 
-    public String playerJoin(String username) {
+    public void playerJoin(String username) {
         this.players.add(username);
         System.out.println("\n" + username + " has joined the server");
-        return username + " has joined the server";
     }
 
-    public String playerQuit(String username) {
+    public void playerQuit(String username) {
         this.players.remove(username);
         System.out.println("\n" + username + " has quit the server");
-        return username + " has left the server";
     }
 
-    public String playerStartLocation(String username) {
-
-        current_mud.addPlayer(current_mud.startLocation(), username);
+    public String playerStartLocation(String username, String mud_name) {
+        this.setMUDGameInstance(mud_name);
+        this.current_mud.addPlayer(current_mud.startLocation(), username);
         return current_mud.startLocation();
     }
 
@@ -116,6 +114,11 @@ public class ServerImplementation implements ServerInterface {
                             "\n\nServer is running. . ."
         );
 
+    }
+
+    private void setMUDGameInstance(String mud_name) {
+
+        this.current_mud = this.mud_games.get(mud_name);
     }
 
     public void createMUD(String mud_name) {

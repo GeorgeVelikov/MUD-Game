@@ -52,6 +52,11 @@ public class ClientImplementation implements ClientInterface {
         }
     }
 
+    private void setMUDName(String mud_name) {
+
+        this.mud_name = mud_name;
+    }
+
     // server operations & game quitting/playing
     public void players() throws RemoteException {
         System.out.println(
@@ -68,11 +73,18 @@ public class ClientImplementation implements ClientInterface {
             String action = this.enterAction().toLowerCase();
 
             if (action.startsWith("create ")) {
-                this.remote.createMUD(action.replace("create ", ""));
+                String game_name = action.replace("create ", "");
+
+                if (this.remote.gameExists(game_name)) {
+                    System.out.println("MUD " + game_name + " already exists"); }
+                else {
+                    this.remote.createMUD(game_name); }
             }
 
             if (action.startsWith("join ")) {
-                System.out.println(action.replace("join ", ""));
+                String game_name = action.replace("join ", "");
+                this.setMUDName(game_name);
+                this.play();
             }
 
             if (action.equals("exit")) {
@@ -191,7 +203,7 @@ public class ClientImplementation implements ClientInterface {
         String action;
 
         // set starting loc
-        this.setLocation(remote.playerStartLocation(this.username));
+        this.setLocation(remote.playerStartLocation(this.username, this.mud_name));
 
         while(this.playing) {
             // sanitize action text

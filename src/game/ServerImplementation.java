@@ -7,13 +7,45 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class ServerImplementation implements ServerInterface {
     private List<String> players = new ArrayList<>();
     private String server_name;
-    private MUD mud_game_map;
+    private Map<String, MUD> mud_games = new HashMap<>();
+    private MUD current_mud;
+
+    public String menu() {
+        String msg = "\nMENU";
+
+        msg += "\n\tCreate a new mud game (Create <gamename>)";
+        msg += "\n\tJoin a mud game (Join <gamename>)";
+
+        if(mud_games.size() <= 0) {
+            msg += "\n\t\t-> No mud games exist";
+        }
+        else {
+            for (int i = 0; i < mud_games.keySet().size(); i++) {
+                msg = msg.concat("\n\t\t-> " + mud_games.keySet().toArray()[i]);
+            }
+        }
+
+
+        return msg;
+    }
+
+    public boolean playerExists(String name) {
+
+        return this.players.contains(name);
+    }
+
+    public boolean gameExists(String mud_name) {
+
+        return this.mud_games.keySet().contains(mud_name);
+    }
 
     public String playersOnline() {
 
@@ -22,32 +54,35 @@ public class ServerImplementation implements ServerInterface {
 
     public String playerJoin(String username) {
         this.players.add(username);
+        System.out.println("\n" + username + " has joined the server");
         return username + " has joined the server";
     }
 
     public String playerQuit(String username) {
         this.players.remove(username);
+        System.out.println("\n" + username + " has quit the server");
         return username + " has left the server";
     }
 
     public String playerStartLocation(String username) {
 
-        mud_game_map.addPlayer(mud_game_map.startLocation(), username);
-        return mud_game_map.startLocation();
+        current_mud.addPlayer(current_mud.startLocation(), username);
+        return current_mud.startLocation();
     }
 
     public String playerLook(String location) {
 
-        return this.mud_game_map.locationInfo(location);
+        return this.current_mud.locationInfo(location);
     }
 
     public String playerMove(String user_loc, String user_move, String user_name) {
 
-        return this.mud_game_map.movePlayer(user_loc, user_move, user_name);
+        return this.current_mud.movePlayer(user_loc, user_move, user_name);
     }
 
     public boolean playerTake(String loc, String item) {
-        return this.mud_game_map.takeItem(loc, item);
+
+        return this.current_mud.takeItem(loc, item);
     }
 
     private void createServer(int port_registry, int port_server) throws RemoteException {
@@ -58,8 +93,6 @@ public class ServerImplementation implements ServerInterface {
             System.err.println("Error, cannot get hostname: " + e.getMessage());
         }
 
-        System.out.println("Server created on " + port_registry);
-
         System.setProperty("java.security.policy", ".policy");
         System.setSecurityManager(new SecurityManager());
 
@@ -67,7 +100,7 @@ public class ServerImplementation implements ServerInterface {
 
 
         String url = "rmi://" + this.server_name + ":" + port_registry + "/mud";
-        System.out.println("Registered on " + url);
+        System.out.println("\nServer registered on " + url);
 
         try {
 
@@ -77,16 +110,28 @@ public class ServerImplementation implements ServerInterface {
             System.err.println("Error, Malformed url: " + e.getMessage());
         }
 
-        System.out.println( "Hostname: " + this.server_name +
-                            "\nServerImplementation port: " + port_server +
-                            "\nRegistry port: " + port_registry
+        System.out.println( "\tHostname: \t\t" + this.server_name +
+                            "\n\tServer port: \t" + port_server +
+                            "\n\tRegistry port: \t" + port_registry +
+                            "\n\nServer is running. . ."
         );
 
     }
 
-    ServerImplementation(int port_registry, int port_server, MUD map) throws RemoteException {
-        this.mud_game_map = map;
+    public void createMUD(String mud_name) {
+        String edges = "./args/mymud.edg";
+        String messages = "./args/mymud.msg";
+        String things = "./args/mymud.thg";
+        System.out.println("\nMUD game of the name " + mud_name + " has been created");
+        MUD mud_map = new MUD(edges, messages, things);
+        this.mud_games.put(mud_name, mud_map);
+    }
+
+    ServerImplementation(int port_registry, int port_server) throws RemoteException {
         createServer(port_registry, port_server);
+
+        // create a default mud instance
+        this.createMUD("default");
     }
 
 }

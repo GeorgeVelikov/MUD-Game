@@ -4,8 +4,8 @@ import java.rmi.RemoteException;
 
 interface ClientInterface {
     void connect() throws RemoteException;
+    void menu() throws RemoteException;
     void join() throws RemoteException;
-    void play() throws RemoteException;
     void quit() throws RemoteException;
     void disconnect() throws RemoteException;
 

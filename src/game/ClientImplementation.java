@@ -14,6 +14,7 @@ import java.util.List;
 public class ClientImplementation implements ClientInterface {
     // server connected to do data
     private ServerInterface remote;
+    private String mud_name;
     private String hostname;
     private int port;
 
@@ -45,28 +46,54 @@ public class ClientImplementation implements ClientInterface {
         this.location = loc;
     }
 
+    private void setInventorySize(Integer size) {
+        for(int i=0; i<size; i++) {
+            this.inventory.add("[ ]");
+        }
+    }
 
-    // server operations
+    // server operations & game quitting/playing
     public void players() throws RemoteException {
         System.out.println(
                 remote.playersOnline()
         );
     }
 
+    public void menu() throws RemoteException {
+        while(!this.playing) {
+            System.out.println(
+                    this.remote.menu() + "\n"
+            );
+
+            String action = this.enterAction().toLowerCase();
+
+            if (action.startsWith("create ")) {
+                this.remote.createMUD(action.replace("create ", ""));
+            }
+
+            if (action.startsWith("join ")) {
+                System.out.println(action.replace("join ", ""));
+            }
+
+            if (action.equals("exit")) {
+                this.disconnect(); break;
+            }
+        }
+    }
+
     public void join() throws RemoteException {
-        System.out.println(
-                remote.playerJoin(this.username)
-        );
+        remote.playerJoin(this.username);
+        System.out.println("\nWelcome to the MUD server " + this.hostname);
     }
 
     public void quit() throws RemoteException {
+        remote.playerQuit(this.username);
         this.playing = false;
 
-        System.out.println(
-                remote.playerQuit(this.username)
-        );
+        System.out.println("You have quit " + this.mud_name);
+        this.mud_name = "";
 
-        this.disconnect();
+        this.menu();
     }
 
     public void disconnect() {
@@ -110,10 +137,17 @@ public class ClientImplementation implements ClientInterface {
         boolean item_exists = this.remote.playerTake(this.location, item);
 
         if(item_exists) {
-            this.inventory.add(item);
-            System.out.println("You have added " + item + " to your inventory");
-            this.checkInventory();
+            for(int i=0; i<=this.inventory.size(); i++){
+                if (this.inventory.get(i).equals("[ ]")) {
+                    this.inventory.set(i, "[" + item + "]");
+                    System.out.println("You have added " + item + " to your inventory");
+                    this.checkInventory();
+                    break;
+                }
+
+            }
         }
+
 
         else
             System.out.println("I cannot find this item");
@@ -188,6 +222,7 @@ public class ClientImplementation implements ClientInterface {
         this.setHostname(_hostname);
         this.setPort(_port);
         this.setName(_username);
+        this.setInventorySize(4);
 
         System.setProperty("java.security.policy", ".policy");
         System.setSecurityManager(new SecurityManager());

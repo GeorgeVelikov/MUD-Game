@@ -6,17 +6,14 @@ public class Server {
     // TODO: ServerManager that can have multiple servers on it
     // TODO: User limit on server
     public static void main(String[] args) throws RemoteException {
-        if (args.length != 3) {
-            System.err.println("Usage: MUDServer <edgesfile> <messagesfile> <thingsfile>");
+        if (args.length != 2) {
+            System.err.println("Usage: MUDServer <rmiregistry port> <server port>");
             return;
         }
 
-        String edges = args[0];
-        String messages = args[1];
-        String things = args[2];
+        Integer port_registry = Integer.parseInt(args[0]);
+        Integer port_server = Integer.parseInt(args[1]);
 
-        MUD mud_map = new MUD(edges, messages, things);
-        new ServerImplementation(50014, 50015, mud_map);
-        System.out.println("Server is running boye");
+        new ServerImplementation(port_registry, port_server);
     }
 }

@@ -36,8 +36,8 @@ public class Client {
         ClientImplementation client = new ClientImplementation(hostname, port, _username);
 
         client.connect();
-
         client.join();
-        client.play();
+
+        client.menu();
     }
 }

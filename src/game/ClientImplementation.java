@@ -197,7 +197,7 @@ public class ClientImplementation implements ClientInterface {
 
 
     // game loop
-    public void play() throws RemoteException {
+    private void play() throws RemoteException {
         // game state vars
         this.playing = true;
         String action;

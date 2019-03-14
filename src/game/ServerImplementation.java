@@ -47,11 +47,6 @@ public class ServerImplementation implements ServerInterface {
         return this.mud_games.keySet().contains(mud_name);
     }
 
-    public String playersOnline() {
-
-        return "These players are online: " + this.players;
-    }
-
     public void playerJoin(String username) {
         this.players.add(username);
         System.out.println("\n" + username + " has joined the server");
@@ -60,6 +55,11 @@ public class ServerImplementation implements ServerInterface {
     public void playerQuit(String username) {
         this.players.remove(username);
         System.out.println("\n" + username + " has quit the server");
+    }
+
+    public String playersOnline() {
+
+        return "These players are online: " + this.players;
     }
 
     public String playerStartLocation(String username, String mud_name) {

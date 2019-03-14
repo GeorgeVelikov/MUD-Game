@@ -16,6 +16,8 @@ public class ServerImplementation implements ServerInterface {
     private List<String> players = new ArrayList<>();
     private String server_name;
     private Map<String, MUD> mud_games = new HashMap<>();
+
+    // surely there has to be a better way than this
     private MUD current_mud;
 
     public String menu() {
@@ -121,7 +123,7 @@ public class ServerImplementation implements ServerInterface {
         this.current_mud = this.mud_games.get(mud_name);
     }
 
-    public void createMUD(String mud_name) {
+    public void createMUDGameInstance(String mud_name) {
         String edges = "./args/mymud.edg";
         String messages = "./args/mymud.msg";
         String things = "./args/mymud.thg";
@@ -134,7 +136,7 @@ public class ServerImplementation implements ServerInterface {
         createServer(port_registry, port_server);
 
         // create a default mud instance
-        this.createMUD("default");
+        this.createMUDGameInstance("default");
     }
 
 }

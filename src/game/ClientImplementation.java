@@ -12,11 +12,13 @@ import java.util.List;
 
 
 public class ClientImplementation implements ClientInterface {
-    // server connected to do data
+    // data connected to the server
     private ServerInterface remote;
-    private String mud_name;
     private String hostname;
     private int port;
+
+    // game name
+    private String mud_name;
 
     // user data
     private boolean playing;
@@ -78,7 +80,7 @@ public class ClientImplementation implements ClientInterface {
                 if (this.remote.gameExists(game_name)) {
                     System.out.println("MUD " + game_name + " already exists"); }
                 else {
-                    this.remote.createMUD(game_name); }
+                    this.remote.createMUDGameInstance(game_name); }
             }
 
             if (action.startsWith("join ")) {
@@ -183,18 +185,6 @@ public class ClientImplementation implements ClientInterface {
         );
     }
 
-    private String enterAction() {
-        System.out.print(this.username + "~> ");
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-
-        try {
-            return input.readLine();
-        }
-        catch(IOException e) {
-            return enterAction();
-        }
-    }
-
 
     // game loop
     private void play() throws RemoteException {
@@ -228,6 +218,19 @@ public class ClientImplementation implements ClientInterface {
         }
     }
 
+
+    // input manager
+    private String enterAction() {
+        System.out.print(this.username + "~> ");
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+
+        try {
+            return input.readLine();
+        }
+        catch(IOException e) {
+            return enterAction();
+        }
+    }
 
     // creator
     ClientImplementation(String _hostname, int _port, String _username) {

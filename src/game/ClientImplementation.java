@@ -102,7 +102,7 @@ public class ClientImplementation implements ClientInterface {
     private void look() throws RemoteException {
         System.out.println(
                 "Node: " + this.location +
-                        this.remote.playerLook(this.location)
+                        this.remote.playerLook(this.location).replace(this.username, "<You>")
         );
     }
 
@@ -157,7 +157,7 @@ public class ClientImplementation implements ClientInterface {
         String action;
 
         // set starting loc
-        this.setLocation(remote.playerStartLocation());
+        this.setLocation(remote.playerStartLocation(this.username));
 
         while(this.playing) {
             // sanitize action text

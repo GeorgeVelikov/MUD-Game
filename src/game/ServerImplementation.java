@@ -30,8 +30,9 @@ public class ServerImplementation implements ServerInterface {
         return username + " has left the server";
     }
 
-    public String playerStartLocation() {
+    public String playerStartLocation(String username) {
 
+        mud_game_map.addPlayer(mud_game_map.startLocation(), username);
         return mud_game_map.startLocation();
     }
 
@@ -42,7 +43,7 @@ public class ServerImplementation implements ServerInterface {
 
     public String playerMove(String user_loc, String user_move, String user_name) {
 
-        return this.mud_game_map.moveThing(user_loc, user_move, user_name);
+        return this.mud_game_map.movePlayer(user_loc, user_move, user_name);
     }
 
     public boolean playerTake(String loc, String item) {

@@ -1,10 +1,6 @@
 package game;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Vector;
-import java.util.Iterator;
+import java.util.*;
 
 // Represents a location in the game.MUD (a vertex in the graph)
 class MUDVertex
@@ -13,6 +9,7 @@ class MUDVertex
     public String 					_msg = "";         	// Message about this location
     public Map<String, MUDEdge> 	_routes; 			// Association between direction (e.g. "north") and a path (game.MUDEdge)
     public List<String> 			_things;     		// The things (e.g. players) at this location
+	public List<String>				_players = new ArrayList<>();
 
     MUDVertex(String nm )
     {
@@ -36,7 +33,18 @@ class MUDVertex
 
 		iter = _things.iterator();
 		if (iter.hasNext()) {
-			summary += "You can see: ";
+			summary += "You can see these items: ";
+
+			do {
+				summary = summary.concat((String)iter.next());
+				if (iter.hasNext())
+					summary += ", ";
+			} while (iter.hasNext());
+		}
+
+		iter = _players.iterator();
+		if (iter.hasNext()) {
+			summary += "\nPeople in this location: ";
 
 			do {
 				summary = summary.concat((String)iter.next());

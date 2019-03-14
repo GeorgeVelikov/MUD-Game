@@ -273,6 +273,24 @@ public class MUD
         return e._dest._name;
     }
 
+    public void addPlayer( String loc, String player )
+    {
+        MUDVertex v = getVertex( loc );
+        v._players.add( player );
+    }
+
+
+    public String movePlayer( String loc, String dir, String player )
+    {
+        MUDVertex v = getVertex( loc );
+        MUDEdge e = v._routes.get( dir );
+        if (e == null)   // if there is no route in that direction
+            return loc;  // no move is made; return current location.
+        v._players.remove( player );
+        e._dest._players.add( player );
+        return e._dest._name;
+    }
+
     /* user can take item from loc */
     public boolean takeItem(String loc, String item)
     {

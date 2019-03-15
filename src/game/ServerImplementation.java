@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +22,8 @@ public class ServerImplementation implements ServerInterface {
     private Map<String, MUD> allMUDGames = new HashMap<>(); // all muds on the server
     private Integer maxMUDGames; // hard limit on muds on server
 
+    private Integer playerInventoryLimit;
+
     /*
      * surely there has to be a better way than this,
      * this holds the current mud instance operations
@@ -34,9 +37,9 @@ public class ServerImplementation implements ServerInterface {
         String msg = "\nMENU" + "\t\t\t\t\t\t\t\t\t\t" +
                      "\t|Games on server " + this.allMUDGames.keySet().size() + "/" + this.maxMUDGames +
                      "\t|Users on server " + this.players.size() + "/" + this.serverMaxPlayers;
-
-        msg += "\n\tCreate a new mud game \t(Create <gamename>)";
-        msg += "\n\tJoin a mud game \t\t(Join <gamename>)";
+        msg += "\n\tExit server \t\t\t[Exit]";
+        msg += "\n\tCreate a new mud game \t[Create <gamename>]";
+        msg += "\n\tJoin a mud game \t\t[Join <gamename>]";
 
         if(allMUDGames.size() <= 0) {
             msg += "\n\t\t-> No mud games exist";
@@ -71,17 +74,15 @@ public class ServerImplementation implements ServerInterface {
 
     // players join/quit/check server status
     public boolean playerJoin(String username) {
-        // TODO: server client number reached, add return for user
-
         if (this.players.size() < this.serverMaxPlayers) {
             this.players.add(username);
             this.notification("\n" + username + " has joined the server");
             return true;
         }
-        else {
-            this.notification("\n" + username + " has attempted to join the server. Server is full");
-            return false;
-        }
+
+        this.notification("\n" + username + " has attempted to join the server. Server is full");
+        return false;
+
     }
 
     public void playerQuitServer(String username) {
@@ -92,7 +93,7 @@ public class ServerImplementation implements ServerInterface {
         this.players.remove(username);
     }
 
-    public void playerQuitMUD(String location, String username, String mud_name) {
+    public void playerQuitMUD(String location, String username, List<String> inventory, String mud_name) {
          while (this.serverUsed) {
             assert true; // waits until it's free
         }
@@ -171,6 +172,11 @@ public class ServerImplementation implements ServerInterface {
         this.setServerIsNotUsed();
 
         return state;
+    }
+
+    public Integer playerLimitInventory() {
+
+        return this.playerInventoryLimit;
     }
 
 
@@ -254,14 +260,23 @@ public class ServerImplementation implements ServerInterface {
         this.maxMUDGames = amount;
     }
 
+    private void setServerPlayerInventoryLimit(Integer amount) {
+
+        this.playerInventoryLimit = amount;
+    }
+
 
     // creator for server
-    ServerImplementation(int port_registry, int port_server) throws RemoteException {
+    ServerImplementation(int port_registry, int port_server, int limitMUD, int limitPlayers, int limitInventory) throws RemoteException {
+        // runs rmiregistry automatically for the registry port specified before it creates the server
+        LocateRegistry.createRegistry(port_registry);
+
         createServer(port_registry, port_server);
 
         // CONTROLS FOR SERVER SPECS, I would have made them nicer if the project was bigger, being passed as args etc.
-        this.setServerMaxPlayers(4);
-        this.setServerMaxMUDs(4);
+        this.setServerMaxMUDs(limitMUD);
+        this.setServerMaxPlayers(limitPlayers);
+        this.setServerPlayerInventoryLimit(limitInventory);
 
         /*
          * create a default mud instance as to always have a game in it

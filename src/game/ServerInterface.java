@@ -2,11 +2,11 @@ package game;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 public interface ServerInterface extends Remote {
-    boolean playerJoin(String username) throws RemoteException;
     void playerQuitServer(String username) throws RemoteException;
-    void playerQuitMUD(String location, String username, String mud_name) throws RemoteException;
+    void playerQuitMUD(String location, String username, List<String> inventory, String mud_name) throws RemoteException;
     void notification(String msg) throws RemoteException;
 
 
@@ -19,6 +19,11 @@ public interface ServerInterface extends Remote {
     String playerMove(String user_loc, String user_move, String user_name, String mud_name) throws RemoteException;
 
 
+    Integer playerLimitInventory() throws RemoteException;
+
+
+    // always inverted
+    boolean playerJoin(String username) throws RemoteException;
     boolean playerTake(String loc, String item, String mud_name) throws RemoteException;
     boolean playerExists(String name) throws RemoteException;
     boolean gameExists(String mud_name) throws RemoteException;

@@ -19,7 +19,6 @@ class ClientImplementation implements ClientInterface {
 
     // game name
     private String mud_name;
-    private Integer inventory_size;
 
     // user data
     private boolean playing;
@@ -75,7 +74,7 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void menu() throws RemoteException {
-        this.setInventorySize(this.inventory_size);
+        this.setInventorySize(this.remote.playerLimitInventory());
 
         while(!this.playing) {
             System.out.println(
@@ -109,16 +108,16 @@ class ClientImplementation implements ClientInterface {
         boolean serverIsFull = !remote.playerJoin(this.username);
 
         if (serverIsFull) {
-            System.out.println("Server is currently full, you will be connected once there is an empty spot");
+            System.out.println("\nServer is currently full, you will be connected once there is an empty spot");
             while (!remote.playerJoin(this.username)) {
                   assert true;
             }
         }
-        System.out.println("Welcome to server " + this.hostname);
+        System.out.println("\nWelcome to server " + this.hostname);
     }
 
     private void quit() throws RemoteException {
-        this.remote.playerQuitMUD(this.location, this.username, this.mud_name);
+        this.remote.playerQuitMUD(this.location, this.username, this.inventory, this.mud_name);
         this.playing = false;
 
         System.out.println("You have quit " + this.mud_name);
@@ -191,20 +190,38 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void checkInventory() {
-        System.out.println(
-                "Your inventory: " +
-                this.inventory + "\n"
+        String inv = "";
+        for( String inventorySspace : this.inventory) {
+            inv = inv.concat(inventorySspace + " ");
+        }
 
+        System.out.println(
+                "Your inventory: " + inv + "\n"
         );
     }
 
     private void help() {
         System.out.println(
-                "\t~-~-~-~-~-~-~-~-~-~> HELP <~-~-~-~-~-~-~-~-~-\n" +
-                "\t\t\t   SERVER: \tquit, players\n" +
-                "\tPLAYER OPERATIONS: \tlook, take\n" +
-                "\t\t\t MOVEMENT: \tnorth, west, south, east\n" +
-                "\t~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~\n"
+                "\t~-~-~-~-~-~-~-~-~-~-~> H E L P <~-~-~-~-~-~-~-~-~-~-~\n" +
+
+                "\t|\t  GAME:\tQuit the mud game \t\t[quit]\t\t\t|\n" +
+                "\t|\t\t\tWho is in the server \t[players]\t\t|\n" +
+                "\t|\t\t\tHow to play \t\t\t[help]\t\t\t|\n" +
+
+                "\t|===================================================|\n" +
+
+                "\t|\tPLAYER:\tLook around you \t\t[look]\t\t\t|\n" +
+                "\t|\t\t\tTake an item \t\t\t[take <item>]\t|\n" +
+                "\t|\t\t\tCheck your inventory \t[inventory]\t\t|\n" +
+
+                "\t|===================================================|\n" +
+
+                "\t| MOVEMENT:\tMove north \t\t\t\t[north]\t\t\t|\n" +
+                "\t|\t\t\tMove west \t\t\t\t[west]\t\t\t|\n" +
+                "\t|\t\t\tMove south \t\t\t\t[south]\t\t\t|\n" +
+                "\t|\t\t\tMove east \t\t\t\t[east]\t\t\t|\n" +
+
+                "\t~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~\n"
         );
     }
 
@@ -265,7 +282,7 @@ class ClientImplementation implements ClientInterface {
             return input.readLine();
         }
         catch(IOException e) {
-            return "";
+            return enterAction(msg);
         }
     }
 
@@ -288,7 +305,6 @@ class ClientImplementation implements ClientInterface {
 
         this.join(); // actually join the connected server after basic verification
 
-        this.inventory_size = 4;
         this.menu(); // loads up the game menu
     }
 }

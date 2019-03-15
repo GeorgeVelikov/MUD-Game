@@ -95,6 +95,13 @@ public class ServerImplementation implements ServerInterface {
         MUD currentMUD = this.getCurrentMUD(mud_name);
         currentMUD.removePlayer(location, username);
 
+        for(String item : inventory) {
+            if (!item.equals("[ ]")) {
+                item = item.replace("[", "").replace("]", "");
+                currentMUD.addThing(location, item);
+            }
+        }
+
         this.setServerIsNotUsed();
 
         this.notification("\n" + username + " has quit MUD game " + mud_name);

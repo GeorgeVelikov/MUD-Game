@@ -48,16 +48,13 @@ class ClientImplementation implements ClientInterface {
         this.location = loc;
     }
 
-    private void setInventorySize(Integer size) {
+    private void setInventorySize() throws RemoteException {
         /* Cleans up inventory once the users are prompted to the menu, I planned on server-wide inventories.
          * I would have treated MUDs like "zones" and servers as a "world", users can jump in and out of zones,
          * and find items planed through out the world. Honestly if this was a software project (making a game)
          * I would have went full blown and went for some sort of dungeon crawler (with graphics, of course).
         */
-        this.inventory = new ArrayList<>();
-        for(int i=0; i<size; i++) {
-            this.inventory.add("[ ]");
-        }
+        this.inventory = this.remote.playerSetInventory();
     }
 
     private void setMUDName(String mud_name) {
@@ -74,7 +71,7 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void menu() throws RemoteException {
-        this.setInventorySize(this.remote.playerLimitInventory());
+        this.setInventorySize();
 
         while(!this.playing) {
             System.out.println(
@@ -169,24 +166,28 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void take(String item) throws RemoteException {
-        boolean item_exists = this.remote.playerTake(this.location, item, this.mud_name);
+        boolean item_exists = this.remote.playerTake(this.location, item, this.inventory, this.mud_name);
+
 
         if(item_exists) {
-            for(int i=0; i<=this.inventory.size(); i++){
+            for(int i=0; i<this.inventory.size(); i++){
                 if (this.inventory.get(i).equals("[ ]")) {
                     this.inventory.set(i, "[" + item + "]");
                     System.out.println("You have added " + item + " to your inventory");
                     this.checkInventory();
                     break;
                 }
-
             }
         }
 
+        else if (!this.inventory.contains("[ ]")) {
+            System.out.println("You feel the crushing weight of your backpack and decide not to take " + item);
+        }
 
-        else
-            System.out.println("I cannot find this item");
 
+        else {
+            System.out.println("I cannot find the item " + item);
+        }
     }
 
     private void checkInventory() {

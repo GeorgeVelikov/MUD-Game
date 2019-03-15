@@ -242,7 +242,7 @@ public class MUD
     /**
      * Add a thing to a location; used to enable us to add new users.
      */
-    private void addThing( String loc, String thing )
+    public void addThing( String loc, String thing )
     {
         MUDVertex v = getVertex( loc );
         v._things.add( thing );
@@ -251,10 +251,22 @@ public class MUD
     /**
      * Remove a thing from a location.
      */
-    private void delThing( String loc, String thing )
+    public void delThing( String loc, String thing )
     {
         MUDVertex v = getVertex( loc );
-        v._things.remove( thing );
+
+        if(v._things.contains(thing)) {
+            String msg = "Evidence of a ";
+
+            if (thing.endsWith("s")) {
+                msg = msg.replace("a ", "");
+            }
+
+            if (!v._things.contains(msg)) {
+                this.createThing(loc, msg + thing + " residing here before");
+            }
+            v._things.remove( thing );
+        }
     }
 
     public void removePlayer(String loc, String user) {
@@ -302,19 +314,7 @@ public class MUD
         MUDVertex current_vertex = getVertex(loc);
         List<String> items = current_vertex._things;
 
-        if(items.contains(item)) {
-            this.delThing(loc, item);
-            String msg = "Evidence of a ";
-            if (item.endsWith("s")) {
-                msg = msg.replace("a ", "");
-            }
-
-            this.createThing(loc, msg + item + " residing here before");
-            return true;
-        }
-
-        else
-            return false;
+        return items.contains(item);
     }
 
     /**

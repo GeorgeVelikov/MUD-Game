@@ -159,7 +159,7 @@ public class ServerImplementation implements ServerInterface {
         return msg;
     }
 
-    public boolean playerTake(String loc, String item, String mud_name) {
+    public boolean playerTake(String loc, String item, List<String> inventory, String mud_name) {
         while (this.serverUsed) {
             assert true; // waits until it's free
         }
@@ -167,14 +167,35 @@ public class ServerImplementation implements ServerInterface {
         this.setServerIsUsed();
         this.setMUDGameInstance(mud_name);
 
-        boolean state = this.currentMUD.takeItem(loc, item);
+        boolean userHasSpace = inventory.contains("[ ]");
+        boolean itemExists = this.currentMUD.takeItem(loc, item);
 
-        this.setServerIsNotUsed();
+        if (itemExists && userHasSpace) {
+            this.currentMUD.delThing(loc, item);
+            this.setServerIsNotUsed();
+            return true;
+        }
 
-        return state;
+        if (userHasSpace) {
+            this.setServerIsNotUsed();
+            return true;
+        }
+
+        else {
+            this.setServerIsNotUsed();
+            return false;
+        }
     }
 
-    public Integer playerLimitInventory() {
+    public List<String> playerSetInventory() {
+        List<String> inventory = new ArrayList<>();
+        for(int i=0; i<this.getPlayerLimitInventory(); i++) {
+            inventory.add("[ ]");
+        }
+        return inventory;
+    }
+
+    public Integer getPlayerLimitInventory() {
 
         return this.playerInventoryLimit;
     }

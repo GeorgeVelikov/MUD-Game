@@ -13,6 +13,6 @@ public class Server {
         Integer port_registry = Integer.parseInt(args[0]);
         Integer port_server = Integer.parseInt(args[1]);
 
-        new ServerImplementation(port_registry, port_server, 4, 4, 1);
+        new ServerImplementation(port_registry, port_server, 4, 4, 4);
     }
 }

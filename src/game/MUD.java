@@ -16,7 +16,8 @@ public class MUD
     // A record of all the vertices in the game.MUD graph. HashMaps are not
     // synchronized, but we don't really need this to be synchronised.
     private Map<String, MUDVertex> vertexMap = new HashMap<>();
-
+    private List<String> playersMUD = new ArrayList<>();
+    private Integer playersMUDLimit;
     private String _startLocation = "";
 
     /**
@@ -30,6 +31,31 @@ public class MUD
         MUDVertex v = getOrCreateVertex( sourceName );
         MUDVertex w = getOrCreateVertex( destName );
         v._routes.put( direction, new MUDEdge( w, view ) );
+    }
+
+    public boolean addMUDPlayer(String username) {
+        if (this.playersMUD.size() < this.playersMUDLimit) {
+            this.playersMUD.add(username);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public void removeMUDPlayer(String username) {
+
+        this.playersMUD.remove(username);
+    }
+
+    public Integer getMUDPlayerLimit() {
+
+        return this.playersMUDLimit;
+    }
+
+    public List<String> getMUDPlayers() {
+
+        return this.playersMUD;
     }
 
     /**
@@ -195,11 +221,13 @@ public class MUD
     /**
      * A constructor that creates the game.MUD.
      */
-    public MUD( String edgesfile, String messagesfile, String thingsfile )
+    public MUD( String edgesfile, String messagesfile, String thingsfile, Integer player_limit )
     {
         createEdges( edgesfile );
         recordMessages( messagesfile );
         recordThings( thingsfile );
+
+        this.playersMUDLimit = player_limit;
 
         System.out.println( "Files read..." );
         System.out.println( vertexMap.size( ) + " vertices\n" );
@@ -329,7 +357,7 @@ public class MUD
             return;
         }
 
-        MUD m = new MUD( args[0], args[1], args[2] );
+        MUD m = new MUD( args[0], args[1], args[2], 4 );
         System.out.println( m.toString() );
     }
 }

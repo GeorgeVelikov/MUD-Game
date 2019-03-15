@@ -40,7 +40,10 @@ public class ServerImplementation implements ServerInterface {
         }
         else {
             for (int i = 0; i < allMUDGames.keySet().size(); i++) {
-                msg = msg.concat("\n\t\t-> " + allMUDGames.keySet().toArray()[i]);
+                String key = allMUDGames.keySet().toArray()[i].toString();
+                Integer curPlayerCount = allMUDGames.get(key).getMUDPlayers().size();
+                Integer maxPlayerCount = allMUDGames.get(key).getMUDPlayerLimit();
+                msg = msg.concat("\n\t\t-> " + key + "\t\t(" + curPlayerCount + "/" + maxPlayerCount + ")");
             }
         }
 
@@ -55,7 +58,7 @@ public class ServerImplementation implements ServerInterface {
         return this.players.contains(name);
     }
 
-    public boolean gameExists(String mud_name) {
+    public boolean existsMUDGameInstance(String mud_name) {
 
         return this.allMUDGames.keySet().contains(mud_name);
     }
@@ -67,14 +70,14 @@ public class ServerImplementation implements ServerInterface {
 
 
     // players join/quit/check server status
-    public boolean playerJoin(String username) {
+    public boolean playerJoinServer(String username) {
         if (this.players.size() < this.serverMaxPlayers) {
             this.players.add(username);
-            this.notification("\n" + username + " has joined the server");
+            this.notification(username + " has joined the server");
             return true;
         }
 
-        this.notification("\n" + username + " has attempted to join the server. Server is full");
+        this.notification(username + " has attempted to join the server. Server is full");
         return false;
 
     }
@@ -87,6 +90,39 @@ public class ServerImplementation implements ServerInterface {
         this.players.remove(username);
     }
 
+    public String getServerPlayers() {
+        String msg = "These players are online: ";
+
+        for(String p : this.players) {
+            msg = msg.concat(p + ", ");
+        }
+        return msg;
+    }
+
+    public boolean playerJoinMUD(String username, String mud_name) {
+        while (this.serverUsed) {
+            assert true; // waits until it's free
+        }
+
+        this.setServerIsUsed();
+
+        MUD currentMUD = this.getCurrentMUD(mud_name);
+
+        if (currentMUD.addMUDPlayer(username)) {
+            this.notification("User " + username + " has joined MUD game " + mud_name + " " +
+                    currentMUD.getMUDPlayers().size() + "/" + currentMUD.getMUDPlayerLimit());
+            this.setServerIsNotUsed();
+            return true;
+
+        }
+        else {
+            this.notification("User " + username + " attempted to join MUD game " + mud_name + " " +
+                    currentMUD.getMUDPlayers().size() + "/" + currentMUD.getMUDPlayerLimit());
+            this.setServerIsNotUsed();
+            return false;
+        }
+    }
+
     public void playerQuitMUD(String location, String username, List<String> inventory, String mud_name) {
          while (this.serverUsed) {
             assert true; // waits until it's free
@@ -96,6 +132,7 @@ public class ServerImplementation implements ServerInterface {
 
         MUD currentMUD = this.getCurrentMUD(mud_name);
         currentMUD.removePlayer(location, username);
+        currentMUD.removeMUDPlayer(username);
 
         for(String item : inventory) {
             if (!item.equals("[ ]")) {
@@ -109,9 +146,25 @@ public class ServerImplementation implements ServerInterface {
         this.notification("\n" + username + " has quit MUD game " + mud_name);
     }
 
-    public String playersOnline() {
+    public String getMUDPlayers(String username, String mud_name) {
+        while (this.serverUsed) {
+            assert true; // waits until it's free
+        }
 
-        return "These players are online: " + this.players;
+        this.setServerIsUsed();
+
+        MUD currentMUD = this.getCurrentMUD(mud_name);
+        String msg = "\nPlayers currently in this MUD: ";
+
+        for(String user : currentMUD.getMUDPlayers()) {
+            if (user.equals(username))
+                user = "<You>";
+            msg = msg.concat(user + ", ");
+        }
+
+        this.setServerIsNotUsed();
+
+        return msg;
     }
 
 
@@ -240,7 +293,7 @@ public class ServerImplementation implements ServerInterface {
 
     }
 
-    public String createMUDGameInstance(String mud_name) {
+    public String createMUDGameInstance(String mud_name, Integer player_max) {
         // MUD game limit on server
         Integer game_limit = 4;
 
@@ -249,7 +302,7 @@ public class ServerImplementation implements ServerInterface {
             String messages = "./args/mymud.msg";
             String things = "./args/mymud.thg";
             System.out.println("\nMUD game of the name " + mud_name + " has been created");
-            MUD mud_map = new MUD(edges, messages, things);
+            MUD mud_map = new MUD(edges, messages, things, player_max);
             this.allMUDGames.put(mud_name, mud_map);
 
             return "Game " + mud_name + " created successfully";
@@ -312,6 +365,6 @@ public class ServerImplementation implements ServerInterface {
          * create a default mud instance as to always have a game in it
          * even if you remove it, the game will handle it and show a special message
         */
-        this.createMUDGameInstance("default");
+        this.createMUDGameInstance("default", limitPlayers);
     }
 }

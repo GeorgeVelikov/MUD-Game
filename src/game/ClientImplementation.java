@@ -67,9 +67,15 @@ class ClientImplementation implements ClientInterface {
 
 
     // server operations & game quitting/playing
-    private void players() throws RemoteException {
+    private void playersMUD() throws RemoteException {
         System.out.println(
-                remote.playersOnline()
+                remote.getMUDPlayers(this.username, this.mud_name)
+        );
+    }
+
+    private void playersServer() throws RemoteException {
+        System.out.println(
+                this.remote.getServerPlayers()
         );
     }
 
@@ -86,10 +92,17 @@ class ClientImplementation implements ClientInterface {
             if (action.startsWith("create ")) {
                 String game_name = action.replace("create ", "");
 
-                if (this.remote.gameExists(game_name)) {
+                if (this.remote.existsMUDGameInstance(game_name)) {
                     System.out.println("MUD " + game_name + " already exists"); }
                 else {
-                    System.out.println(this.remote.createMUDGameInstance(game_name)); }
+                    System.out.println(
+                            this.remote.createMUDGameInstance(game_name,
+                                    Integer.parseInt(
+                                            this.enterAction("Maximum number of players allowed in " + game_name +": ")
+                                    )
+                            )
+                    );
+                }
             }
 
             if (action.startsWith("join ")) {
@@ -105,15 +118,15 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void join() throws RemoteException {
-        boolean serverIsFull = !remote.playerJoin(this.username);
+        boolean serverIsFull = !remote.playerJoinServer(this.username);
 
         if (serverIsFull) {
-            System.out.println("\nServer is currently full, you will be connected once there is an empty spot");
-            while (!remote.playerJoin(this.username)) {
+            System.out.println("Server is currently full, you will be connected once there is an empty spot");
+            while (!remote.playerJoinServer(this.username)) {
                   assert true;
             }
         }
-        System.out.println("\nWelcome to server " + this.hostname);
+        System.out.println("Welcome to server " + this.hostname);
     }
 
     private void quit() throws RemoteException {
@@ -164,7 +177,7 @@ class ClientImplementation implements ClientInterface {
         users = users.replaceAll("\\b"+this.username+"\\b", "<You>");
 
         System.out.println(
-                "\nNode: " + this.location + users
+                "Node: " + this.location + users
         );
     }
 
@@ -198,7 +211,7 @@ class ClientImplementation implements ClientInterface {
         }
 
         System.out.println(
-                "Your inventory: " + inv + "\n"
+                "Your inventory: " + inv
         );
     }
 
@@ -207,7 +220,9 @@ class ClientImplementation implements ClientInterface {
                 "\t~-~-~-~-~-~-~-~-~-~-~> H E L P <~-~-~-~-~-~-~-~-~-~-~\n" +
 
                 "\t|\t  GAME:\tQuit the mud game \t\t[quit]\t\t\t|\n" +
-                "\t|\t\t\tWho is in the server \t[players]\t\t|\n" +
+                "\t|\t\t\tWho is in the server \t[players server]|\n" +
+                "\t|\t\t\tWho is in the mud game \t[players game]\t|\n" +
+                "\t|\t\t\tBoth players checks \t[players]\t\t|\n" +
                 "\t|\t\t\tHow to play \t\t\t[help]\t\t\t|\n" +
 
                 "\t|===================================================|\n" +
@@ -230,34 +245,47 @@ class ClientImplementation implements ClientInterface {
 
     // game loop
     private void play() throws RemoteException {
-        System.out.println("\nWelcome to MUD game " + this.mud_name);
+        if(!this.remote.playerJoinMUD(this.username, this.mud_name)) {
+            System.out.println("Cannot join the MUD game at the moment as it is full. Try again later");
+            menu();
+        }
+        else {
+            System.out.println("Welcome to MUD game " + this.mud_name);
 
-        this.help();
-        // game state vars
-        this.playing = true;
-        String action;
+            this.help();
+            // game state vars
+            this.playing = true;
+            String action;
 
-        // set starting loc
-        this.setLocation(remote.playerStartLocation(this.username, this.mud_name));
+            // set starting loc
+            this.setLocation(remote.playerStartLocation(this.username, this.mud_name));
 
-        while(this.playing) {
-            // sanitize action text
-            action = enterAction().toLowerCase();
+            while(this.playing) {
+                // sanitize action text
+                action = enterAction().toLowerCase();
 
-            if (action.equals("help")) {
-                this.help(); }
-            if (action.equals("quit")) {
-                this.quit(); }
-            if (action.equals("players")) {
-                this.players(); }
-            if (action.equals("look")) {
-                this.look(); }
-            if (action.equals("inventory")) {
-                this.checkInventory(); }
-            if (action.startsWith("take ")) {
-                this.take(action.replace("take ", "")); }
-            if (action.matches("north|west|south|east")) {
-                this.move(action); }
+                if (action.equals("help")) {
+                    this.help(); }
+                if (action.equals("quit")) {
+                    this.quit(); }
+                if (action.equals("look")) {
+                    this.look(); }
+                if (action.equals("inventory")) {
+                    this.checkInventory(); }
+
+                if (action.equals("players game")) {
+                    this.playersMUD(); }
+                if (action.equals("players server")) {
+                    this.playersServer(); }
+                if (action.equals("players")) {
+                    this.playersServer(); this.playersMUD(); }
+
+                if (action.startsWith("take ")) {
+                    this.take(action.replace("take ", "")); }
+
+                if (action.matches("north|west|south|east")) {
+                    this.move(action); }
+            }
         }
     }
 

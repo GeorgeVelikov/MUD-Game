@@ -15,6 +15,7 @@ public class Client {
             System.err.println("Error, illegal arguments: " + e.getMessage() + "\n <hostname> <registry port>");
         }
 
+        // if more servers exist, menu exists here where a list of servers and quit is given
         new ClientImplementation(hostname, port);
     }
 }

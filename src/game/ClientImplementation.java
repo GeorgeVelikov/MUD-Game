@@ -66,6 +66,7 @@ class ClientImplementation implements ClientInterface {
         this.mud_name = mud_name;
     }
 
+
     // server operations & game quitting/playing
     private void players() throws RemoteException {
         System.out.println(
@@ -105,12 +106,19 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void join() throws RemoteException {
-        remote.playerJoin(this.username);
-        System.out.println("\nWelcome to the MUD server " + this.hostname);
+        boolean serverIsFull = !remote.playerJoin(this.username);
+
+        if (serverIsFull) {
+            System.out.println("Server is currently full, you will be connected once there is an empty spot");
+            while (!remote.playerJoin(this.username)) {
+                  assert true;
+            }
+        }
+        System.out.println("Welcome to server " + this.hostname);
     }
 
     private void quit() throws RemoteException {
-        this.remote.playerQuit(this.location, this.username, this.mud_name);
+        this.remote.playerQuitMUD(this.location, this.username, this.mud_name);
         this.playing = false;
 
         System.out.println("You have quit " + this.mud_name);
@@ -119,10 +127,13 @@ class ClientImplementation implements ClientInterface {
         this.menu();
     }
 
-    private void disconnect() {
+    private void disconnect() throws RemoteException {
+        this.remote.playerQuitServer(this.username);
         this.remote = null;
         this.hostname = null;
         this.port = 0; // null
+        this.username = null;
+        return; // complains if there's no return, although intelliJ does not like a return here ¯\_(ツ)_/¯
     }
     // TODO: put name/port in connect so that we can choose which server to connect to
     private void connect() throws RemoteException {
@@ -201,6 +212,7 @@ class ClientImplementation implements ClientInterface {
     // game loop
     private void play() throws RemoteException {
         System.out.println("\nWelcome to MUD game " + this.mud_name);
+
         this.help();
         // game state vars
         this.playing = true;
@@ -256,6 +268,7 @@ class ClientImplementation implements ClientInterface {
             return "";
         }
     }
+
 
     // creator
     ClientImplementation(String _hostname, int _port) throws RemoteException {

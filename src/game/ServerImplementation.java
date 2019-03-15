@@ -20,9 +20,9 @@ public class ServerImplementation implements ServerInterface {
     private Map<String, MUD> mud_games = new HashMap<>();
 
     /*
-     surely there has to be a better way than this,
-     this holds the current mud instance operations
-     that are being processed by the server
+     * surely there has to be a better way than this,
+     * this holds the current mud instance operations
+     * that are being processed by the server
     */
     private MUD current_mud;
     private boolean serverUsed = false;
@@ -49,7 +49,7 @@ public class ServerImplementation implements ServerInterface {
     }
 
 
-    // server verifications
+    // server verifications & notifications
     public boolean playerExists(String name) {
 
         return this.players.contains(name);
@@ -60,18 +60,37 @@ public class ServerImplementation implements ServerInterface {
         return this.mud_games.keySet().contains(mud_name);
     }
 
+    public void notification(String msg) {
 
-    // players join/quit/check server status
-    public void playerJoin(String username) {
-        // TODO: server client number reached, add return for user
-        this.players.add(username);
-        System.out.println("\n" + username + " has joined the server");
+        System.out.println(msg);
     }
 
-    public void playerQuit(String location, String username, String mud_name) {
-        this.players.remove(username);
 
-        while (this.serverUsed) {
+    // players join/quit/check server status
+    public boolean playerJoin(String username) {
+        // TODO: server client number reached, add return for user
+
+        if (this.players.size() < this.server_max_players) {
+            this.players.add(username);
+            this.notification("\n" + username + " has joined the server");
+            return true;
+        }
+        else {
+            this.notification("\n" + username + " has attempted to join the server. Server is full");
+            return false;
+        }
+    }
+
+    public void playerQuitServer(String username) {
+        this.notification(
+                "User " + username + " has left the server. Server capacity " +
+                this.players.size() + "/" + this.server_max_players
+        );
+        this.players.remove(username);
+    }
+
+    public void playerQuitMUD(String location, String username, String mud_name) {
+         while (this.serverUsed) {
             assert true; // waits until it's free
         }
 
@@ -80,7 +99,7 @@ public class ServerImplementation implements ServerInterface {
         this.current_mud.removePlayer(location, username);
         this.setServerIsNotUsed();
 
-        System.out.println("\n" + username + " has quit the server");
+        this.notification("\n" + username + " has quit MUD game " + mud_name);
     }
 
     public String playersOnline() {
@@ -102,6 +121,8 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsNotUsed();
 
+        this.notification("User " + username + " has joined MUD game " + mud_name);
+
         return msg;
     }
 
@@ -117,7 +138,6 @@ public class ServerImplementation implements ServerInterface {
         this.setServerIsNotUsed();
 
         return msg;
-
     }
 
     public String playerMove(String user_loc, String user_move, String user_name, String mud_name) {
@@ -230,7 +250,7 @@ public class ServerImplementation implements ServerInterface {
     // creator for server
     ServerImplementation(int port_registry, int port_server) throws RemoteException {
         createServer(port_registry, port_server);
-        this.setServerMaxPlayers(4);
+        this.setServerMaxPlayers(1);
 
         // create a default mud instance
         this.createMUDGameInstance("default");

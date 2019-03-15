@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class ClientImplementation implements ClientInterface {
+class ClientImplementation implements ClientInterface {
     // data connected to the server
     private ServerInterface remote;
     private String hostname;
@@ -19,6 +19,7 @@ public class ClientImplementation implements ClientInterface {
 
     // game name
     private String mud_name;
+    private Integer inventory_size;
 
     // user data
     private boolean playing;
@@ -28,17 +29,17 @@ public class ClientImplementation implements ClientInterface {
 
 
     // setters
-    public void setName(String name) {
+    private void setName(String name) {
 
         this.username = name;
     }
 
-    public void setHostname(String name) {
+    private void setHostname(String name) {
 
         this.hostname = name;
     }
 
-    public void setPort(int _port) {
+    private void setPort(int _port) {
 
         this.port = _port;
     }
@@ -49,6 +50,12 @@ public class ClientImplementation implements ClientInterface {
     }
 
     private void setInventorySize(Integer size) {
+        /* Cleans up inventory once the users are prompted to the menu, I planned on server-wide inventories.
+         * I would have treated MUDs like "zones" and servers as a "world", users can jump in and out of zones,
+         * and find items planed through out the world. Honestly if this was a software project (making a game)
+         * I would have went full blown and went for some sort of dungeon crawler (with graphics, of course).
+        */
+        this.inventory = new ArrayList<>();
         for(int i=0; i<size; i++) {
             this.inventory.add("[ ]");
         }
@@ -60,13 +67,15 @@ public class ClientImplementation implements ClientInterface {
     }
 
     // server operations & game quitting/playing
-    public void players() throws RemoteException {
+    private void players() throws RemoteException {
         System.out.println(
                 remote.playersOnline()
         );
     }
 
-    public void menu() throws RemoteException {
+    private void menu() throws RemoteException {
+        this.setInventorySize(this.inventory_size);
+
         while(!this.playing) {
             System.out.println(
                     this.remote.menu() + "\n"
@@ -80,7 +89,7 @@ public class ClientImplementation implements ClientInterface {
                 if (this.remote.gameExists(game_name)) {
                     System.out.println("MUD " + game_name + " already exists"); }
                 else {
-                    this.remote.createMUDGameInstance(game_name); }
+                    System.out.println(this.remote.createMUDGameInstance(game_name)); }
             }
 
             if (action.startsWith("join ")) {
@@ -95,13 +104,13 @@ public class ClientImplementation implements ClientInterface {
         }
     }
 
-    public void join() throws RemoteException {
+    private void join() throws RemoteException {
         remote.playerJoin(this.username);
         System.out.println("\nWelcome to the MUD server " + this.hostname);
     }
 
-    public void quit() throws RemoteException {
-        remote.playerQuit(this.username);
+    private void quit() throws RemoteException {
+        remote.playerQuit(this.location, this.username);
         this.playing = false;
 
         System.out.println("You have quit " + this.mud_name);
@@ -110,13 +119,13 @@ public class ClientImplementation implements ClientInterface {
         this.menu();
     }
 
-    public void disconnect() {
+    private void disconnect() {
         this.remote = null;
         this.hostname = null;
         this.port = 0; // null
     }
     // TODO: put name/port in connect so that we can choose which server to connect to
-    public void connect() throws RemoteException {
+    private void connect() throws RemoteException {
         try {
             String url = "rmi://" + this.hostname + ":" + this.port + "/mud";
             this.remote = (ServerInterface) Naming.lookup(url);
@@ -142,7 +151,7 @@ public class ClientImplementation implements ClientInterface {
 
     private void look() throws RemoteException {
         System.out.println(
-                "Node: " + this.location +
+                "\nNode: " + this.location +
                         this.remote.playerLook(this.location).replace(this.username, "<You>")
         );
     }
@@ -171,7 +180,8 @@ public class ClientImplementation implements ClientInterface {
     private void checkInventory() {
         System.out.println(
                 "Your inventory: " +
-                this.inventory
+                this.inventory + "\n"
+
         );
     }
 
@@ -188,6 +198,7 @@ public class ClientImplementation implements ClientInterface {
 
     // game loop
     private void play() throws RemoteException {
+        System.out.println("\nWelcome to MUD game " + this.mud_name);
         // game state vars
         this.playing = true;
         String action;
@@ -209,10 +220,8 @@ public class ClientImplementation implements ClientInterface {
                 this.look(); }
             if (action.equals("inventory")) {
                 this.checkInventory(); }
-
             if (action.startsWith("take ")) {
                 this.take(action.replace("take ", "")); }
-
             if (action.matches("north|west|south|east")) {
                 this.move(action); }
         }
@@ -232,14 +241,38 @@ public class ClientImplementation implements ClientInterface {
         }
     }
 
-    // creator
-    ClientImplementation(String _hostname, int _port, String _username) {
-        this.setHostname(_hostname);
-        this.setPort(_port);
-        this.setName(_username);
-        this.setInventorySize(4);
+    private String enterAction(String msg) {
+        System.out.print(msg);
 
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+
+        try {
+            return input.readLine();
+        }
+        catch(IOException e) {
+            return "";
+        }
+    }
+
+    // creator
+    ClientImplementation(String _hostname, int _port) throws RemoteException {
         System.setProperty("java.security.policy", ".policy");
         System.setSecurityManager(new SecurityManager());
+        this.setHostname(_hostname);
+        this.setPort(_port);
+
+        this.connect(); // connects to the rmi server
+
+        this.setName(this.enterAction("Enter your username: "));
+
+        while (this.remote.playerExists(this.username)) {
+            System.out.println("A user with the name " + this.username + " already exists in the server");
+            this.setName(this.enterAction("Enter a different username: "));
+        }
+
+        this.join(); // actually join the connected server after basic verification
+
+        this.inventory_size = 4;
+        this.menu(); // loads up the game menu
     }
 }

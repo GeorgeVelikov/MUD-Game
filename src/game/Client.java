@@ -7,17 +7,6 @@ import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 
 public class Client {
-    private static String enterName() {
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-
-        try {
-            return input.readLine();
-        }
-        catch(IOException e) {
-            return "";
-        }
-    }
-
     public static void main(String[] args) throws RemoteException {
         String hostname = "";
         int port = 0;
@@ -30,14 +19,6 @@ public class Client {
             System.err.println("Error, illegal arguments: " + e.getMessage());
         }
 
-        System.out.print("Joining " + hostname + "\nPlease enter your username: ");
-        String _username = enterName();
-
-        ClientImplementation client = new ClientImplementation(hostname, port, _username);
-
-        client.connect();
-        client.join();
-
-        client.menu();
+        ClientImplementation client = new ClientImplementation(hostname, port);
     }
 }

@@ -257,6 +257,11 @@ public class MUD
         v._things.remove( thing );
     }
 
+    public void removePlayer(String loc, String user) {
+        MUDVertex v = getVertex(loc);
+        v._players.remove(user);
+    }
+
     /**
      * A method to enable a player to move through the game.MUD (a player
      * is a thing). Checks that there is a route to travel on. Returns

@@ -14,6 +14,8 @@ import java.util.Map;
 
 public class ServerImplementation implements ServerInterface {
     private List<String> players = new ArrayList<>();
+    // max players in the server
+    private Integer server_max_players;
     private String server_name;
     private Map<String, MUD> mud_games = new HashMap<>();
 
@@ -58,8 +60,9 @@ public class ServerImplementation implements ServerInterface {
         System.out.println("\n" + username + " has joined the server");
     }
 
-    public void playerQuit(String username) {
+    public void playerQuit(String location, String username) {
         this.players.remove(username);
+        this.current_mud.removePlayer(location, username);
         System.out.println("\n" + username + " has quit the server");
     }
 
@@ -127,17 +130,33 @@ public class ServerImplementation implements ServerInterface {
         this.current_mud = this.mud_games.get(mud_name);
     }
 
-    public void createMUDGameInstance(String mud_name) {
-        String edges = "./args/mymud.edg";
-        String messages = "./args/mymud.msg";
-        String things = "./args/mymud.thg";
-        System.out.println("\nMUD game of the name " + mud_name + " has been created");
-        MUD mud_map = new MUD(edges, messages, things);
-        this.mud_games.put(mud_name, mud_map);
+    private void setServerMaxPlayers(Integer amount) {
+
+        this.server_max_players = amount;
+    }
+
+    public String createMUDGameInstance(String mud_name) {
+        // MUD game limit on server
+        Integer game_limit = 4;
+
+        if (this.mud_games.size() < game_limit) {
+            String edges = "./args/mymud.edg";
+            String messages = "./args/mymud.msg";
+            String things = "./args/mymud.thg";
+            System.out.println("\nMUD game of the name " + mud_name + " has been created");
+            MUD mud_map = new MUD(edges, messages, things);
+            this.mud_games.put(mud_name, mud_map);
+
+            return "Game " + mud_name + " created successfully";
+        }
+        else {
+            return "Game limit on server reached";
+        }
     }
 
     ServerImplementation(int port_registry, int port_server) throws RemoteException {
         createServer(port_registry, port_server);
+        this.server_max_players = 4;
 
         // create a default mud instance
         this.createMUDGameInstance("default");

@@ -5,13 +5,16 @@ import java.rmi.RemoteException;
 public class Server {
     // TODO: multiple servers eventually?
     public static void main(String[] args) throws RemoteException {
-        if (args.length != 2) {
-            System.err.println("Usage: MUDServer <rmiregistry port> <server port>");
-            return;
-        }
+        Integer port_registry = 0;
+        Integer port_server = 0;
 
-        Integer port_registry = Integer.parseInt(args[0]);
-        Integer port_server = Integer.parseInt(args[1]);
+        try {
+            port_registry = Integer.parseInt(args[0]);
+            port_server = Integer.parseInt(args[1]);
+        }
+        catch(ArrayIndexOutOfBoundsException e) {
+            System.err.println("Error, illegal arguments: " + e.getMessage() + "\n <rmiregistry port> <server port>");
+        }
 
         new ServerImplementation(port_registry, port_server, 4, 4, 4);
     }

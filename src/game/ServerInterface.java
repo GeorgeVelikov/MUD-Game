@@ -23,10 +23,10 @@ public interface ServerInterface extends Remote {
     String createMUDGameInstance(String mud_name, Integer player_max) throws RemoteException;
     boolean existsMUDGameInstance(String mud_name) throws RemoteException;
 
-    String playerStartLocation(String username, String mud_name) throws RemoteException;
+    String setPlayerStartLocation(String username, String mud_name) throws RemoteException;
     String playerLook(String location, String mud_name) throws RemoteException;
     String playerMove(String user_loc, String user_move, String user_name, String mud_name) throws RemoteException;
-    List<String> playerSetInventory() throws RemoteException;
+    List<String> setPlayerInventory() throws RemoteException;
     boolean playerTake(String loc, String item, List<String> inventory, String mud_name) throws RemoteException;
     boolean playerExists(String name) throws RemoteException;
 

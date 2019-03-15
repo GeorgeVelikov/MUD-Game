@@ -57,7 +57,7 @@ class ClientImplementation implements ClientInterface {
          * and find items planed through out the world. Honestly if this was a software project (making a game)
          * I would have went full blown and went for some sort of dungeon crawler (with graphics, of course).
         */
-        this.inventory = this.remote.playerSetInventory();
+        this.inventory = this.remote.setPlayerInventory();
     }
 
     private void setMUDName(String mud_name) {
@@ -84,40 +84,60 @@ class ClientImplementation implements ClientInterface {
 
         while(!this.playing) {
             System.out.println(
-                    this.remote.menu() + "\n"
+                    this.remote.menu()
             );
 
             String action = this.enterAction().toLowerCase();
 
             if (action.startsWith("create ")) {
-                String game_name = action.replace("create ", "");
-
-                if (this.remote.existsMUDGameInstance(game_name)) {
-                    System.out.println("MUD " + game_name + " already exists"); }
-                else {
-                    System.out.println(
-                            this.remote.createMUDGameInstance(game_name,
-                                    Integer.parseInt(
-                                            this.enterAction("Maximum number of players allowed in " + game_name +": ")
-                                    )
-                            )
-                    );
-                }
+                this.createMUD(action);
             }
 
             if (action.startsWith("join ")) {
                 String game_name = action.replace("join ", "");
-                this.setMUDName(game_name);
-                this.play();
+                this.joinMUDGame(game_name);
             }
 
             if (action.equals("exit")) {
-                this.disconnect(); break;
+                this.disconnectServer(); break;
             }
         }
     }
 
-    private void join() throws RemoteException {
+    private void createMUD(String action) throws RemoteException {
+        String game_name = action.replace("create ", "");
+
+        if (this.remote.existsMUDGameInstance(game_name)) {
+            System.out.println("MUD " + game_name + " already exists"); }
+        else {
+            String amount = this.enterAction("Maximum number of players allowed in " + game_name +": ");
+            Integer num = 1;
+            try {
+                num = Integer.parseInt(amount);
+            }
+            catch (NumberFormatException e) {
+                System.err.println("Error, that was not a number");
+                this.menu();
+            }
+
+            System.out.println(this.remote.createMUDGameInstance(game_name, num ));
+        }
+    }
+
+    private void connectServer() throws RemoteException {
+        try {
+            String url = "rmi://" + this.hostname + ":" + this.port + "/mud";
+            this.remote = (ServerInterface) Naming.lookup(url);
+        }
+        catch(NotBoundException e) {
+            System.err.println("Error, Server not bound: " + e.getMessage());
+        }
+        catch(MalformedURLException e) {
+            System.err.println("Error, Malformed url: " + e.getMessage());
+        }
+    }
+
+    private void joinServer() throws RemoteException {
         boolean serverIsFull = !remote.playerJoinServer(this.username);
 
         if (serverIsFull) {
@@ -129,17 +149,7 @@ class ClientImplementation implements ClientInterface {
         System.out.println("Welcome to server " + this.hostname);
     }
 
-    private void quit() throws RemoteException {
-        this.remote.playerQuitMUD(this.location, this.username, this.inventory, this.mud_name);
-        this.playing = false;
-
-        System.out.println("You have quit " + this.mud_name);
-        this.mud_name = "";
-
-        this.menu();
-    }
-
-    private void disconnect() throws RemoteException {
+    private void disconnectServer() throws RemoteException {
         this.remote.playerQuitServer(this.username);
         this.remote = null;
         this.hostname = null;
@@ -148,17 +158,19 @@ class ClientImplementation implements ClientInterface {
         return; // complains if there's no return, although intelliJ does not like a return here ¯\_(ツ)_/¯
     }
 
-    private void connect() throws RemoteException {
-        try {
-            String url = "rmi://" + this.hostname + ":" + this.port + "/mud";
-            this.remote = (ServerInterface) Naming.lookup(url);
-        }
-        catch(NotBoundException e) {
-            System.err.println("Error, Server not bound: " + e.getMessage());
-        }
-        catch(MalformedURLException e) {
-            System.err.println("Error, Malformed url: " + e.getMessage());
-        }
+    private void joinMUDGame(String mud_name) throws RemoteException {
+        this.setMUDName(mud_name);
+        this.play();
+    }
+
+    private void quitMUDGame() throws RemoteException {
+        this.remote.playerQuitMUD(this.location, this.username, this.inventory, this.mud_name);
+        this.playing = false;
+
+        System.out.println("You have quitMUDGame " + this.mud_name);
+        this.mud_name = "";
+
+        this.menu();
     }
 
 
@@ -219,7 +231,7 @@ class ClientImplementation implements ClientInterface {
         System.out.println(
                 "\t~-~-~-~-~-~-~-~-~-~-~> H E L P <~-~-~-~-~-~-~-~-~-~-~\n" +
 
-                "\t|\t  GAME:\tQuit the mud game \t\t[quit]\t\t\t|\n" +
+                "\t|\t  GAME:\tQuit the mud game \t\t[quitMUDGame]\t\t\t|\n" +
                 "\t|\t\t\tWho is in the server \t[players server]|\n" +
                 "\t|\t\t\tWho is in the mud game \t[players game]\t|\n" +
                 "\t|\t\t\tBoth players checks \t[players]\t\t|\n" +
@@ -246,7 +258,7 @@ class ClientImplementation implements ClientInterface {
     // game loop
     private void play() throws RemoteException {
         if(!this.remote.playerJoinMUD(this.username, this.mud_name)) {
-            System.out.println("Cannot join the MUD game at the moment as it is full. Try again later");
+            System.out.println("Cannot joinServer the MUD game at the moment as it is full. Try again later");
             menu();
         }
         else {
@@ -258,7 +270,7 @@ class ClientImplementation implements ClientInterface {
             String action;
 
             // set starting loc
-            this.setLocation(remote.playerStartLocation(this.username, this.mud_name));
+            this.setLocation(remote.setPlayerStartLocation(this.username, this.mud_name));
 
             while(this.playing) {
                 // sanitize action text
@@ -266,8 +278,8 @@ class ClientImplementation implements ClientInterface {
 
                 if (action.equals("help")) {
                     this.help(); }
-                if (action.equals("quit")) {
-                    this.quit(); }
+                if (action.equals("quitMUDGame")) {
+                    this.quitMUDGame(); }
                 if (action.equals("look")) {
                     this.look(); }
                 if (action.equals("inventory")) {
@@ -324,7 +336,7 @@ class ClientImplementation implements ClientInterface {
         this.setHostname(_hostname);
         this.setPort(_port);
 
-        this.connect(); // connects to the rmi server
+        this.connectServer(); // connects to the rmi server
 
         this.setName(this.enterAction("Enter your username: "));
 
@@ -333,7 +345,7 @@ class ClientImplementation implements ClientInterface {
             this.setName(this.enterAction("Enter a different username: "));
         }
 
-        this.join(); // actually join the connected server after basic verification
+        this.joinServer(); // actually joinServer the connected server after basic verification
 
         this.menu(); // loads up the game menu
     }

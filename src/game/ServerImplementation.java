@@ -69,7 +69,49 @@ public class ServerImplementation implements ServerInterface {
     }
 
 
-    // players join/quit/check server status
+    // getters
+    public String getServerPlayers() {
+        String msg = "These players are online: ";
+
+        for(String p : this.players) {
+            msg = msg.concat(p + ", ");
+        }
+        return msg;
+    }
+
+    public String getMUDPlayers(String username, String mud_name) {
+        while (this.serverUsed) {
+            assert true; // waits until it's free
+        }
+
+        this.setServerIsUsed();
+
+        MUD currentMUD = this.getCurrentMUD(mud_name);
+        String msg = "\nPlayers currently in this MUD: ";
+
+        for(String user : currentMUD.getMUDPlayers()) {
+            if (user.equals(username))
+                user = "<You>";
+            msg = msg.concat(user + ", ");
+        }
+
+        this.setServerIsNotUsed();
+
+        return msg;
+    }
+
+    public Integer getPlayerLimitInventory() {
+
+        return this.playerInventoryLimit;
+    }
+
+    private MUD getCurrentMUD(String mud_name) {
+
+        return this.allMUDGames.get(mud_name);
+    }
+
+
+    // players ping the server to do something
     public boolean playerJoinServer(String username) {
         if (this.players.size() < this.serverMaxPlayers) {
             this.players.add(username);
@@ -88,15 +130,6 @@ public class ServerImplementation implements ServerInterface {
                 this.players.size() + "/" + this.serverMaxPlayers
         );
         this.players.remove(username);
-    }
-
-    public String getServerPlayers() {
-        String msg = "These players are online: ";
-
-        for(String p : this.players) {
-            msg = msg.concat(p + ", ");
-        }
-        return msg;
     }
 
     public boolean playerJoinMUD(String username, String mud_name) {
@@ -144,46 +177,6 @@ public class ServerImplementation implements ServerInterface {
         this.setServerIsNotUsed();
 
         this.notification("\n" + username + " has quit MUD game " + mud_name);
-    }
-
-    public String getMUDPlayers(String username, String mud_name) {
-        while (this.serverUsed) {
-            assert true; // waits until it's free
-        }
-
-        this.setServerIsUsed();
-
-        MUD currentMUD = this.getCurrentMUD(mud_name);
-        String msg = "\nPlayers currently in this MUD: ";
-
-        for(String user : currentMUD.getMUDPlayers()) {
-            if (user.equals(username))
-                user = "<You>";
-            msg = msg.concat(user + ", ");
-        }
-
-        this.setServerIsNotUsed();
-
-        return msg;
-    }
-
-
-    // players ping server to do some calculation/transformation
-    public String playerStartLocation(String username, String mud_name) {
-        while (this.serverUsed) {
-            assert true; // waits until it's free
-        }
-        this.setServerIsUsed();
-
-        MUD currentMUD = this.getCurrentMUD(mud_name);
-        currentMUD.addPlayer(currentMUD.startLocation(), username);
-        String msg = currentMUD.startLocation();
-
-        this.setServerIsNotUsed();
-
-        this.notification("User " + username + " has joined MUD game " + mud_name);
-
-        return msg;
     }
 
     public String playerLook(String location, String mud_name) {
@@ -245,19 +238,6 @@ public class ServerImplementation implements ServerInterface {
         }
     }
 
-    public List<String> playerSetInventory() {
-        List<String> inventory = new ArrayList<>();
-        for(int i=0; i<this.getPlayerLimitInventory(); i++) {
-            inventory.add("[ ]");
-        }
-        return inventory;
-    }
-
-    public Integer getPlayerLimitInventory() {
-
-        return this.playerInventoryLimit;
-    }
-
 
     // only a "server client" can create server, all clients can create mud games
     private void createServer(int port_registry, int port_server) throws RemoteException {
@@ -313,10 +293,30 @@ public class ServerImplementation implements ServerInterface {
     }
 
 
-    // server operation setters
-    private MUD getCurrentMUD(String mud_name) {
+    // setters
+    public String setPlayerStartLocation(String username, String mud_name) {
+        while (this.serverUsed) {
+            assert true; // waits until it's free
+        }
+        this.setServerIsUsed();
 
-        return this.allMUDGames.get(mud_name);
+        MUD currentMUD = this.getCurrentMUD(mud_name);
+        currentMUD.addPlayer(currentMUD.startLocation(), username);
+        String msg = currentMUD.startLocation();
+
+        this.setServerIsNotUsed();
+
+        this.notification("User " + username + " has joined MUD game " + mud_name);
+
+        return msg;
+    }
+
+    public List<String> setPlayerInventory() {
+        List<String> inventory = new ArrayList<>();
+        for(int i=0; i<this.getPlayerLimitInventory(); i++) {
+            inventory.add("[ ]");
+        }
+        return inventory;
     }
 
     private void setServerIsUsed() {

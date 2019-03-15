@@ -31,7 +31,7 @@ class ClientImplementation implements ClientInterface {
     // setters
     private void setName(String name) {
 
-        this.username = name;
+        this.username = name.replace(" ", "");
     }
 
     private void setHostname(String name) {
@@ -110,7 +110,7 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void quit() throws RemoteException {
-        remote.playerQuit(this.location, this.username);
+        this.remote.playerQuit(this.location, this.username, this.mud_name);
         this.playing = false;
 
         System.out.println("You have quit " + this.mud_name);
@@ -142,7 +142,7 @@ class ClientImplementation implements ClientInterface {
     // game helpers & prompts for server to calculate user actions
     private void move(String direction) throws RemoteException {
         this.setLocation(
-                remote.playerMove(this.location, direction, this.username)
+                remote.playerMove(this.location, direction, this.username, this.mud_name)
         );
 
         System.out.print("Your new location is ");
@@ -150,9 +150,11 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void look() throws RemoteException {
+        String users = this.remote.playerLook(this.location);
+        users = users.replaceAll("\\b"+this.username+"\\b", "<You>");
+
         System.out.println(
-                "\nNode: " + this.location +
-                        this.remote.playerLook(this.location).replace(this.username, "<You>")
+                "\nNode: " + this.location + users
         );
     }
 
@@ -199,6 +201,7 @@ class ClientImplementation implements ClientInterface {
     // game loop
     private void play() throws RemoteException {
         System.out.println("\nWelcome to MUD game " + this.mud_name);
+        this.help();
         // game state vars
         this.playing = true;
         String action;

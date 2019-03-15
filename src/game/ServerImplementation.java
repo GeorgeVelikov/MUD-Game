@@ -25,6 +25,7 @@ public class ServerImplementation implements ServerInterface {
      that are being processed by the server
     */
     private MUD current_mud;
+    private boolean serverUsed = false;
 
     public String menu() {
         String msg = "\nMENU";
@@ -60,9 +61,18 @@ public class ServerImplementation implements ServerInterface {
         System.out.println("\n" + username + " has joined the server");
     }
 
-    public void playerQuit(String location, String username) {
+    public void playerQuit(String location, String username, String mud_name) {
         this.players.remove(username);
+
+        while (this.serverUsed) {
+            assert true; // waits until it's free
+        }
+
+        this.serverIsUsed();
+        this.setMUDGameInstance(mud_name);
         this.current_mud.removePlayer(location, username);
+        this.serverIsNotUsed();
+
         System.out.println("\n" + username + " has quit the server");
     }
 
@@ -72,6 +82,8 @@ public class ServerImplementation implements ServerInterface {
     }
 
     public String playerStartLocation(String username, String mud_name) {
+
+
         this.setMUDGameInstance(mud_name);
         this.current_mud.addPlayer(current_mud.startLocation(), username);
         return current_mud.startLocation();
@@ -82,8 +94,8 @@ public class ServerImplementation implements ServerInterface {
         return this.current_mud.locationInfo(location);
     }
 
-    public String playerMove(String user_loc, String user_move, String user_name) {
-
+    public String playerMove(String user_loc, String user_move, String user_name, String mud_name) {
+        this.setMUDGameInstance(mud_name);
         return this.current_mud.movePlayer(user_loc, user_move, user_name);
     }
 
@@ -125,11 +137,6 @@ public class ServerImplementation implements ServerInterface {
 
     }
 
-    private void setMUDGameInstance(String mud_name) {
-
-        this.current_mud = this.mud_games.get(mud_name);
-    }
-
     private void setServerMaxPlayers(Integer amount) {
 
         this.server_max_players = amount;
@@ -154,9 +161,23 @@ public class ServerImplementation implements ServerInterface {
         }
     }
 
+    private void setMUDGameInstance(String mud_name) {
+        this.current_mud = this.mud_games.get(mud_name);
+    }
+
+    private void serverIsUsed() {
+
+        this.serverUsed = true;
+    }
+
+    private void serverIsNotUsed() {
+
+        this.serverUsed = false;
+    }
+
     ServerImplementation(int port_registry, int port_server) throws RemoteException {
         createServer(port_registry, port_server);
-        this.server_max_players = 4;
+        this.setServerMaxPlayers(4);
 
         // create a default mud instance
         this.createMUDGameInstance("default");

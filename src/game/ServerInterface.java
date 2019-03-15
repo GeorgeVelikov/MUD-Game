@@ -1,8 +1,10 @@
 package game;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.Remote;
+
 import java.util.List;
+
 
 public interface ServerInterface extends Remote {
     void playerQuitServer(String username) throws RemoteException;

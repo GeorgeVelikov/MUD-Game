@@ -63,6 +63,7 @@ public class ServerImplementation implements ServerInterface {
 
     // players join/quit/check server status
     public void playerJoin(String username) {
+        // TODO: server client number reached, add return for user
         this.players.add(username);
         System.out.println("\n" + username + " has joined the server");
     }

@@ -150,7 +150,7 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void look() throws RemoteException {
-        String users = this.remote.playerLook(this.location);
+        String users = this.remote.playerLook(this.location, this.mud_name);
         users = users.replaceAll("\\b"+this.username+"\\b", "<You>");
 
         System.out.println(
@@ -159,7 +159,7 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void take(String item) throws RemoteException {
-        boolean item_exists = this.remote.playerTake(this.location, item);
+        boolean item_exists = this.remote.playerTake(this.location, item, this.mud_name);
 
         if(item_exists) {
             for(int i=0; i<=this.inventory.size(); i++){

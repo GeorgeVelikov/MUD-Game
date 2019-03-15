@@ -24,14 +24,6 @@ public class ServerImplementation implements ServerInterface {
 
     private Integer playerInventoryLimit;
 
-    /*
-     * surely there has to be a better way than this,
-     * this holds the current mud instance operations
-     * that are being processed by the server
-    */
-    private MUD currentMUD;
-
-
     // player menu's are calculated in server side
     public String menu() {
         String msg = "\nMENU" + "\t\t\t\t\t\t\t\t\t\t" +
@@ -99,8 +91,10 @@ public class ServerImplementation implements ServerInterface {
         }
 
         this.setServerIsUsed();
-        this.setMUDGameInstance(mud_name);
-        this.currentMUD.removePlayer(location, username);
+
+        MUD currentMUD = this.getCurrentMUD(mud_name);
+        currentMUD.removePlayer(location, username);
+
         this.setServerIsNotUsed();
 
         this.notification("\n" + username + " has quit MUD game " + mud_name);
@@ -119,8 +113,8 @@ public class ServerImplementation implements ServerInterface {
         }
         this.setServerIsUsed();
 
-        this.setMUDGameInstance(mud_name);
-        this.currentMUD.addPlayer(currentMUD.startLocation(), username);
+        MUD currentMUD = this.getCurrentMUD(mud_name);
+        currentMUD.addPlayer(currentMUD.startLocation(), username);
         String msg = currentMUD.startLocation();
 
         this.setServerIsNotUsed();
@@ -137,7 +131,8 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsUsed();
 
-        String msg = this.currentMUD.locationInfo(location);
+        MUD currentMUD = this.getCurrentMUD(mud_name);
+        String msg = currentMUD.locationInfo(location);
 
         this.setServerIsNotUsed();
 
@@ -151,8 +146,8 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsUsed();
 
-        this.setMUDGameInstance(mud_name);
-        String msg = this.currentMUD.movePlayer(user_loc, user_move, user_name);
+        MUD currentMUD = this.getCurrentMUD(mud_name);
+        String msg = currentMUD.movePlayer(user_loc, user_move, user_name);
 
         this.setServerIsNotUsed();
 
@@ -165,13 +160,14 @@ public class ServerImplementation implements ServerInterface {
         }
 
         this.setServerIsUsed();
-        this.setMUDGameInstance(mud_name);
+
+        MUD currentMUD = this.getCurrentMUD(mud_name);
 
         boolean userHasSpace = inventory.contains("[ ]");
-        boolean itemExists = this.currentMUD.takeItem(loc, item);
+        boolean itemExists = currentMUD.takeItem(loc, item);
 
         if (itemExists && userHasSpace) {
-            this.currentMUD.delThing(loc, item);
+            currentMUD.delThing(loc, item);
             this.setServerIsNotUsed();
             return true;
         }
@@ -256,9 +252,9 @@ public class ServerImplementation implements ServerInterface {
 
 
     // server operation setters
-    private void setMUDGameInstance(String mud_name) {
+    private MUD getCurrentMUD(String mud_name) {
 
-        this.currentMUD = this.allMUDGames.get(mud_name);
+        return this.allMUDGames.get(mud_name);
     }
 
     private void setServerIsUsed() {
@@ -288,7 +284,11 @@ public class ServerImplementation implements ServerInterface {
 
 
     // creator for server
-    ServerImplementation(int port_registry, int port_server, int limitMUD, int limitPlayers, int limitInventory) throws RemoteException {
+    ServerImplementation(int port_registry,
+                         int port_server,
+                         int limitMUD,
+                         int limitPlayers,
+                         int limitInventory) throws RemoteException {
         // runs rmiregistry automatically for the registry port specified before it creates the server
         LocateRegistry.createRegistry(port_registry);
 
@@ -305,5 +305,4 @@ public class ServerImplementation implements ServerInterface {
         */
         this.createMUDGameInstance("default");
     }
-
 }

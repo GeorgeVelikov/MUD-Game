@@ -131,7 +131,7 @@ class ClientImplementation implements ClientInterface {
         this.username = null;
         return; // complains if there's no return, although intelliJ does not like a return here ¯\_(ツ)_/¯
     }
-    // TODO: put name/port in connect so that we can choose which server to connect to
+
     private void connect() throws RemoteException {
         try {
             String url = "rmi://" + this.hostname + ":" + this.port + "/mud";
@@ -168,7 +168,6 @@ class ClientImplementation implements ClientInterface {
     private void take(String item) throws RemoteException {
         boolean item_exists = this.remote.playerTake(this.location, item, this.inventory, this.mud_name);
 
-
         if(item_exists) {
             for(int i=0; i<this.inventory.size(); i++){
                 if (this.inventory.get(i).equals("[ ]")) {
@@ -183,7 +182,6 @@ class ClientImplementation implements ClientInterface {
         else if (!this.inventory.contains("[ ]")) {
             System.out.println("You feel the crushing weight of your backpack and decide not to take " + item);
         }
-
 
         else {
             System.out.println("I cannot find the item " + item);

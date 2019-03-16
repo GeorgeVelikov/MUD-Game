@@ -76,7 +76,7 @@ class ClientImplementation implements ClientInterface {
                         this.remote.menu()
                 );
 
-                String action = this.enterAction().toLowerCase();
+                String action = this.enterAction().toLowerCase().trim();
 
                 if (action.startsWith("create ")) {
                     this.createMUD(action);
@@ -158,6 +158,10 @@ class ClientImplementation implements ClientInterface {
             System.out.println("Error, MUD game " + game_name + " already exists");
         }
 
+        else if (this.remote.existsMUDGameSlots()) {
+            System.out.println("Error, no more MUD game slots available");
+        }
+
         else {
             String amount = this.enterAction("Maximum number of players allowed in " + game_name +": ");
             Integer num = 1;
@@ -178,8 +182,16 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void joinMUDGame(String mud_name) throws RemoteException {
-        this.setMUDName(mud_name);
-        this.play();
+        boolean gameExists = this.remote.existsMUDGameInstance(mud_name);
+
+        if (gameExists) {
+            this.setMUDName(mud_name);
+            this.play();
+        }
+
+        else {
+            System.out.println("MUD game " + mud_name + " does not exist");
+        }
     }
 
     private void playersMUD() throws RemoteException {

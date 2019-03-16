@@ -62,6 +62,11 @@ public class ServerImplementation implements ServerInterface {
         return this.allMUDGames.keySet().contains(mud_name);
     }
 
+    public boolean existsMUDGameSlots() {
+
+        return this.allMUDGames.size() == this.maxMUDGames;
+    }
+
     public void notification(String msg, boolean error) {
 
         SimpleDateFormat formatter = new SimpleDateFormat("[dd/MM/yyyy HH:mm:ss] ");

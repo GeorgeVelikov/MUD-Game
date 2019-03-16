@@ -22,6 +22,7 @@ public interface ServerInterface extends Remote {
     String menu() throws RemoteException;
     String createMUDGameInstance(String mud_name, String username, Integer player_max) throws RemoteException;
     boolean existsMUDGameInstance(String mud_name) throws RemoteException;
+    boolean existsMUDGameSlots() throws RemoteException;
 
     String setPlayerStartLocation(String username, String mud_name) throws RemoteException;
     String playerLook(String location, String mud_name) throws RemoteException;

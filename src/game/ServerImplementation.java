@@ -5,10 +5,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
 import java.rmi.Naming;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
@@ -65,13 +63,15 @@ public class ServerImplementation implements ServerInterface {
 
     public void notification(String msg) {
 
-        System.out.println(msg);
+        SimpleDateFormat formatter = new SimpleDateFormat("[dd/MM/yyyy HH:mm:ss] ");
+        String date = formatter.format(new Date());
+        System.out.println(date + msg);
     }
 
 
     // getters
     public String getServerPlayers() {
-        String msg = "These players are online: ";
+        String msg = "These players are online in server " + this.serverName + ": ";
 
         for(String p : this.players) {
             msg = msg.concat(p + ", ");
@@ -87,7 +87,7 @@ public class ServerImplementation implements ServerInterface {
         this.setServerIsUsed();
 
         MUD currentMUD = this.getCurrentMUD(mud_name);
-        String msg = "\nPlayers currently in this MUD: ";
+        String msg = "Players currently in this MUD: ";
 
         for(String user : currentMUD.getMUDPlayers()) {
             if (user.equals(username))
@@ -115,11 +115,11 @@ public class ServerImplementation implements ServerInterface {
     public boolean playerJoinServer(String username) {
         if (this.players.size() < this.serverMaxPlayers) {
             this.players.add(username);
-            this.notification(username + " has joined the server");
+            this.notification("\tUser " + username + " has joined the server");
             return true;
         }
 
-        this.notification(username + " has attempted to join the server. Server is full");
+        this.notification("\tUser " + username + " has attempted to join the server. Server is full");
         return false;
 
     }
@@ -255,21 +255,21 @@ public class ServerImplementation implements ServerInterface {
 
 
         String url = "rmi://" + this.serverName + ":" + port_registry + "/mud";
-        System.out.println("\nServer registered on " + url);
 
         try {
-
             Naming.rebind(url, mud_interface);
         }
         catch(MalformedURLException e) {
             System.err.println("Error, Malformed url: " + e.getMessage());
         }
 
-        System.out.println( "\tHostname: \t\t" + this.serverName +
-                            "\n\tServer port: \t" + port_server +
-                            "\n\tRegistry port: \t" + port_registry +
-                            "\n\nServer is running. . ."
+        this.notification( "\tServer registered on " + url +
+                            "\n\t\t\t\t\t\t\tHostname: \t\t" + this.serverName +
+                            "\n\t\t\t\t\t\t\tServer port: \t" + port_server +
+                            "\n\t\t\t\t\t\t\tRegistry port: \t" + port_registry
         );
+
+        this.notification("\tServer is running. . .");
 
     }
 
@@ -278,10 +278,12 @@ public class ServerImplementation implements ServerInterface {
         Integer game_limit = 4;
 
         if (this.allMUDGames.size() < game_limit) {
+            // might want to eventually allow players to launch their own edges
             String edges = "./args/mymud.edg";
             String messages = "./args/mymud.msg";
             String things = "./args/mymud.thg";
-            System.out.println("\nMUD game of the name " + mud_name + " has been created");
+
+            this.notification("\tMUD game of the name " + mud_name + " has been created");
             MUD mud_map = new MUD(edges, messages, things, player_max);
             this.allMUDGames.put(mud_name, mud_map);
 
@@ -306,7 +308,7 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsNotUsed();
 
-        this.notification("User " + username + " has joined MUD game " + mud_name);
+        this.notification("\tUser " + username + " has joined MUD game " + mud_name);
 
         return msg;
     }
@@ -352,6 +354,7 @@ public class ServerImplementation implements ServerInterface {
                          int limitPlayers,
                          int limitInventory) throws RemoteException {
         // runs rmiregistry automatically for the registry port specified before it creates the server
+        System.out.println(""); // just to make things prettier
         LocateRegistry.createRegistry(port_registry);
 
         createServer(port_registry, port_server);

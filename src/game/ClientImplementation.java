@@ -66,19 +66,7 @@ class ClientImplementation implements ClientInterface {
     }
 
 
-    // server operations & game quitting/playing
-    private void playersMUD() throws RemoteException {
-        System.out.println(
-                remote.getMUDPlayers(this.username, this.mud_name)
-        );
-    }
-
-    private void playersServer() throws RemoteException {
-        System.out.println(
-                this.remote.getServerPlayers()
-        );
-    }
-
+    // menu
     private void menu() throws RemoteException {
         this.setInventorySize();
 
@@ -104,26 +92,8 @@ class ClientImplementation implements ClientInterface {
         }
     }
 
-    private void createMUD(String action) throws RemoteException {
-        String game_name = action.replace("create ", "");
 
-        if (this.remote.existsMUDGameInstance(game_name)) {
-            System.out.println("MUD " + game_name + " already exists"); }
-        else {
-            String amount = this.enterAction("Maximum number of players allowed in " + game_name +": ");
-            Integer num = 1;
-            try {
-                num = Integer.parseInt(amount);
-            }
-            catch (NumberFormatException e) {
-                System.err.println("Error, that was not a number");
-                this.menu();
-            }
-
-            System.out.println(this.remote.createMUDGameInstance(game_name, num ));
-        }
-    }
-
+    // server verification/join/status/quit
     private void connectServer() throws RemoteException {
         try {
             String url = "rmi://" + this.hostname + ":" + this.port + "/mud";
@@ -149,6 +119,12 @@ class ClientImplementation implements ClientInterface {
         System.out.println("Welcome to server " + this.hostname);
     }
 
+    private void playersServer() throws RemoteException {
+        System.out.println(
+                this.remote.getServerPlayers()
+        );
+    }
+
     private void disconnectServer() throws RemoteException {
         this.remote.playerQuitServer(this.username);
         this.remote = null;
@@ -158,9 +134,37 @@ class ClientImplementation implements ClientInterface {
         return; // complains if there's no return, although intelliJ does not like a return here ¯\_(ツ)_/¯
     }
 
+
+    // mud game creation/join/status/quit
+    private void createMUD(String action) throws RemoteException {
+        String game_name = action.replace("create ", "");
+
+        if (this.remote.existsMUDGameInstance(game_name)) {
+            System.out.println("MUD " + game_name + " already exists"); }
+        else {
+            String amount = this.enterAction("Maximum number of players allowed in " + game_name +": ");
+            Integer num = 1;
+            try {
+                num = Integer.parseInt(amount);
+            }
+            catch (NumberFormatException e) {
+                System.err.println("Error, that was not a number");
+                this.menu();
+            }
+
+            System.out.println(this.remote.createMUDGameInstance(game_name, num ));
+        }
+    }
+
     private void joinMUDGame(String mud_name) throws RemoteException {
         this.setMUDName(mud_name);
         this.play();
+    }
+
+    private void playersMUD() throws RemoteException {
+        System.out.println(
+                this.remote.getMUDPlayers(this.username, this.mud_name)
+        );
     }
 
     private void quitMUDGame() throws RemoteException {
@@ -231,7 +235,7 @@ class ClientImplementation implements ClientInterface {
         System.out.println(
                 "\t~-~-~-~-~-~-~-~-~-~-~> H E L P <~-~-~-~-~-~-~-~-~-~-~\n" +
 
-                "\t|\t  GAME:\tQuit the mud game \t\t[quitMUDGame]\t\t\t|\n" +
+                "\t|\t  GAME:\tQuit the mud game \t\t[quit]\t\t\t|\n" +
                 "\t|\t\t\tWho is in the server \t[players server]|\n" +
                 "\t|\t\t\tWho is in the mud game \t[players game]\t|\n" +
                 "\t|\t\t\tBoth players checks \t[players]\t\t|\n" +
@@ -274,28 +278,22 @@ class ClientImplementation implements ClientInterface {
 
             while(this.playing) {
                 // sanitize action text
-                action = enterAction().toLowerCase();
+                action = enterAction().toLowerCase().trim();
 
-                if (action.equals("help")) {
-                    this.help(); }
-                if (action.equals("quitMUDGame")) {
-                    this.quitMUDGame(); }
-                if (action.equals("look")) {
-                    this.look(); }
-                if (action.equals("inventory")) {
-                    this.checkInventory(); }
-
-                if (action.equals("players game")) {
-                    this.playersMUD(); }
-                if (action.equals("players server")) {
-                    this.playersServer(); }
-                if (action.equals("players")) {
-                    this.playersServer(); this.playersMUD(); }
+                switch (action) {
+                    case "help":            this.help();                            break;
+                    case "quit":            this.quitMUDGame();                     break;
+                    case "look":            this.look();                            break;
+                    case "inventory":       this.checkInventory();                  break;
+                    case "players game":    this.playersMUD();                      break;
+                    case "players server":  this.playersServer();                   break;
+                    case "players":         this.playersServer(); this.playersMUD();break;
+                }
 
                 if (action.startsWith("take ")) {
                     this.take(action.replace("take ", "")); }
 
-                if (action.matches("north|west|south|east")) {
+                else if (action.matches("north|west|south|east")) {
                     this.move(action); }
             }
         }

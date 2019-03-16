@@ -3,7 +3,7 @@ package game;
 import java.rmi.RemoteException;
 
 public class Server {
-    // TODO: multiple servers eventually?
+    // The way It is structured right now is multiple servers can easily be made
     public static void main(String[] args) throws RemoteException {
         Integer port_registry = 0;
         Integer port_server = 0;

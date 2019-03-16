@@ -205,15 +205,15 @@ public class MUD {
     /**
      * A constructor that creates the game.MUD.
      */
-    public MUD(String edgesfile, String messagesfile, String thingsfile, Integer player_limit) {
+    MUD(String edgesfile, String messagesfile, String thingsfile, Integer player_limit) {
         createEdges(edgesfile);
         recordMessages(messagesfile);
         recordThings(thingsfile);
 
         this.playersMUDLimit = player_limit;
 
-        System.out.println("Files read...");
-        System.out.println(vertexMap.size() + " vertices\n");
+        System.out.print("\t\t\t\t\t\t\tFiles read... ");
+        System.out.println(vertexMap.size() + " vertices");
     }
 
     // This method enables us to display the entire game.MUD (mostly used
@@ -276,31 +276,17 @@ public class MUD {
         }
     }
 
+
+    // i added some stuff
     public void removePlayer(String loc, String user) {
         MUDVertex v = getVertex(loc);
         v._players.remove(user);
-    }
-
-    /**
-     * A method to enable a player to move through the game.MUD (a player
-     * is a thing). Checks that there is a route to travel on. Returns
-     * the location moved to.
-     */
-    public String moveThing(String loc, String dir, String thing) {
-        MUDVertex v = getVertex(loc);
-        MUDEdge e = v._routes.get(dir);
-        if (e == null)   // if there is no route in that direction
-            return loc;  // no move is made; return current location.
-        v._things.remove(thing);
-        e._dest._things.add(thing);
-        return e._dest._name;
     }
 
     public void addPlayer(String loc, String player) {
         MUDVertex v = getVertex(loc);
         v._players.add(player);
     }
-
 
     public String movePlayer(String loc, String dir, String player) {
         MUDVertex v = getVertex(loc);

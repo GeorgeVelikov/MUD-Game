@@ -18,6 +18,7 @@ public class ServerImplementation implements ServerInterface {
     private List<String> players = new ArrayList<>(); // list of players
     private Integer serverMaxPlayers; // hard limit on players
     private boolean serverUsed = false; // lock
+    private List<String> serverPlayersInQue = new ArrayList<>();
 
     private Map<String, MUD> allMUDGames = new HashMap<>(); // all muds on the server
     private Integer maxMUDGames; // hard limit on muds on server
@@ -26,10 +27,10 @@ public class ServerImplementation implements ServerInterface {
 
     // player menu's are calculated in server side
     public String menu() {
-        String msg = "\nMENU" + "\t\t\t\t\t\t\t\t\t\t" +
+        String msg = "MENU" + "\t\t\t\t\t\t\t\t\t\t" +
                      "\t|Games on server " + this.allMUDGames.keySet().size() + "/" + this.maxMUDGames +
                      "\t|Users on server " + this.players.size() + "/" + this.serverMaxPlayers;
-        msg += "\n\tExit server \t\t\t[Exit]";
+        msg += "\n\tExit server \t\t\t[Disconnect]";
         msg += "\n\tCreate a new mud game \t[Create <gamename>]";
         msg += "\n\tJoin a mud game \t\t[Join <gamename>]";
 
@@ -61,27 +62,40 @@ public class ServerImplementation implements ServerInterface {
         return this.allMUDGames.keySet().contains(mud_name);
     }
 
-    public void notification(String msg) {
+    public void notification(String msg, boolean error) {
 
         SimpleDateFormat formatter = new SimpleDateFormat("[dd/MM/yyyy HH:mm:ss] ");
         String date = formatter.format(new Date());
-        System.out.println(date + msg);
+
+        if (!error) {
+            System.out.println(date + msg);
+        }
+
+        else {
+            System.err.println(date + msg);
+        }
     }
 
 
     // getters
-    public String getServerPlayers() {
+    public String getServerPlayers(String username) {
         String msg = "These players are online in server " + this.serverName + ": ";
 
-        for(String p : this.players) {
-            msg = msg.concat(p + ", ");
+        for(String user : this.players) {
+            if (user.equals(username))
+                user = "<You>";
+            msg = msg.concat(user + ", ");
         }
         return msg;
     }
 
     public String getMUDPlayers(String username, String mud_name) {
         while (this.serverUsed) {
-            assert true; // waits until it's free
+            try {
+                Thread.sleep(100); // waits until it's free
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         this.setServerIsUsed();
@@ -113,28 +127,44 @@ public class ServerImplementation implements ServerInterface {
 
     // players ping the server to do something
     public boolean playerJoinServer(String username) {
+        /* Not using a proper que right now it's kind of random as the person to ping the server after
+         * a 100ms sleep first gets the spot (better than a stack, but still kind of based on luck, which can be worse)
+         * If I were to properly implement this, i'd make a player class and have a List<Player> que
+         * Which the server will control here
+        */
         if (this.players.size() < this.serverMaxPlayers) {
+            if (this.serverPlayersInQue.contains(username)) {
+                this.serverPlayersInQue.remove(username);
+            }
             this.players.add(username);
-            this.notification("\tUser " + username + " has joined the server");
+            this.notification("\tUser " + username + " has joined the server. Server capacity " +
+                    this.players.size() + "/" + this.serverMaxPlayers,false);
             return true;
         }
 
-        this.notification("\tUser " + username + " has attempted to join the server. Server is full");
-        return false;
+        else {
+            if (!this.serverPlayersInQue.contains(username)) {
+                this.serverPlayersInQue.add(username);
+                this.notification("\tUser " + username + " has attempted to join the server. Server is full", true);
+            }
+            return false;
+        }
 
     }
 
     public void playerQuitServer(String username) {
-        this.notification(
-                "User " + username + " has left the server. Server capacity " +
-                this.players.size() + "/" + this.serverMaxPlayers
-        );
         this.players.remove(username);
+        this.notification("\tUser " + username + " has left the server. Server capacity " +
+                this.players.size() + "/" + this.serverMaxPlayers, false);
     }
 
     public boolean playerJoinMUD(String username, String mud_name) {
         while (this.serverUsed) {
-            assert true; // waits until it's free
+            try {
+                Thread.sleep(100); // waits until it's free
+            } catch (InterruptedException e) {
+                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+            }
         }
 
         this.setServerIsUsed();
@@ -142,15 +172,15 @@ public class ServerImplementation implements ServerInterface {
         MUD currentMUD = this.getCurrentMUD(mud_name);
 
         if (currentMUD.addMUDPlayer(username)) {
-            this.notification("User " + username + " has joined MUD game " + mud_name + " " +
-                    currentMUD.getMUDPlayers().size() + "/" + currentMUD.getMUDPlayerLimit());
+            this.notification("\tUser " + username + " has joined MUD game " + mud_name + " " +
+                    currentMUD.getMUDPlayers().size() + "/" + currentMUD.getMUDPlayerLimit(), false);
             this.setServerIsNotUsed();
             return true;
 
         }
         else {
-            this.notification("User " + username + " attempted to join MUD game " + mud_name + " " +
-                    currentMUD.getMUDPlayers().size() + "/" + currentMUD.getMUDPlayerLimit());
+            this.notification("\tUser " + username + " attempted to join MUD game " + mud_name + " " +
+                    currentMUD.getMUDPlayers().size() + "/" + currentMUD.getMUDPlayerLimit(), true);
             this.setServerIsNotUsed();
             return false;
         }
@@ -158,8 +188,12 @@ public class ServerImplementation implements ServerInterface {
 
     public void playerQuitMUD(String location, String username, List<String> inventory, String mud_name) {
          while (this.serverUsed) {
-            assert true; // waits until it's free
-        }
+             try {
+                 Thread.sleep(100); // waits until it's free
+             } catch (InterruptedException e) {
+                 this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+             }
+         }
 
         this.setServerIsUsed();
 
@@ -176,12 +210,16 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsNotUsed();
 
-        this.notification("\n" + username + " has quit MUD game " + mud_name);
+        this.notification("\n" + username + " has quit MUD game " + mud_name,false);
     }
 
     public String playerLook(String location, String mud_name) {
         while (this.serverUsed) {
-            assert true; // waits until it's free
+            try {
+                Thread.sleep(100); // waits until it's free
+            } catch (InterruptedException e) {
+                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+            }
         }
 
         this.setServerIsUsed();
@@ -196,7 +234,11 @@ public class ServerImplementation implements ServerInterface {
 
     public String playerMove(String user_loc, String user_move, String user_name, String mud_name) {
         while (this.serverUsed) {
-            assert true; // waits until it's free
+            try {
+                Thread.sleep(100); // waits until it's free
+            } catch (InterruptedException e) {
+                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+            }
         }
 
         this.setServerIsUsed();
@@ -211,7 +253,11 @@ public class ServerImplementation implements ServerInterface {
 
     public boolean playerTake(String loc, String item, List<String> inventory, String mud_name) {
         while (this.serverUsed) {
-            assert true; // waits until it's free
+            try {
+                Thread.sleep(100); // waits until it's free
+            } catch (InterruptedException e) {
+                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+            }
         }
 
         this.setServerIsUsed();
@@ -266,10 +312,9 @@ public class ServerImplementation implements ServerInterface {
         this.notification( "\tServer registered on " + url +
                             "\n\t\t\t\t\t\t\tHostname: \t\t" + this.serverName +
                             "\n\t\t\t\t\t\t\tServer port: \t" + port_server +
-                            "\n\t\t\t\t\t\t\tRegistry port: \t" + port_registry
-        );
+                            "\n\t\t\t\t\t\t\tRegistry port: \t" + port_registry,false);
 
-        this.notification("\tServer is running. . .");
+        this.notification("\tServer is running. . .", false);
 
     }
 
@@ -283,7 +328,7 @@ public class ServerImplementation implements ServerInterface {
             String messages = "./args/mymud.msg";
             String things = "./args/mymud.thg";
 
-            this.notification("\tMUD game of the name " + mud_name + " has been created");
+            this.notification("\tMUD game of the name " + mud_name + " has been created", false);
             MUD mud_map = new MUD(edges, messages, things, player_max);
             this.allMUDGames.put(mud_name, mud_map);
 
@@ -298,7 +343,11 @@ public class ServerImplementation implements ServerInterface {
     // setters
     public String setPlayerStartLocation(String username, String mud_name) {
         while (this.serverUsed) {
-            assert true; // waits until it's free
+            try {
+                Thread.sleep(100); // waits until it's free
+            } catch (InterruptedException e) {
+                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+            }
         }
         this.setServerIsUsed();
 
@@ -307,8 +356,6 @@ public class ServerImplementation implements ServerInterface {
         String msg = currentMUD.startLocation();
 
         this.setServerIsNotUsed();
-
-        this.notification("\tUser " + username + " has joined MUD game " + mud_name);
 
         return msg;
     }
@@ -353,7 +400,7 @@ public class ServerImplementation implements ServerInterface {
                          int limitMUD,
                          int limitPlayers,
                          int limitInventory) throws RemoteException {
-        // runs rmiregistry automatically for the registry port specified before it creates the server
+        // runs rmi registry automatically for the registry port specified before it creates the server
         System.out.println(""); // just to make things prettier
         LocateRegistry.createRegistry(port_registry);
 

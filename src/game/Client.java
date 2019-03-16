@@ -1,5 +1,6 @@
 package game;
 
+import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 
 public class Client {
@@ -16,6 +17,11 @@ public class Client {
         }
 
         // if more servers exist, menu exists here where a list of servers and quit is given
-        new ClientImplementation(hostname, port);
+        try {
+            new ClientImplementation(hostname, port);
+        }
+        catch (ConnectException e) {
+            System.err.println("Server is not accessible at this time. Try again later");
+        }
     }
 }

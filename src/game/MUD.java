@@ -212,8 +212,11 @@ public class MUD {
 
         this.playersMUDLimit = player_limit;
 
-        System.out.print("\t\t\t\t\t\t\tFiles read... ");
-        System.out.println(vertexMap.size() + " vertices");
+        // did not look as nice, so i decided to remove it
+        /*
+         * System.out.print("\t\t\t\t\t\t\tFiles read... ");
+         * System.out.println(vertexMap.size() + " vertices");
+        */
     }
 
     // This method enables us to display the entire game.MUD (mostly used

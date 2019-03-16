@@ -1,14 +1,14 @@
 package game;
 
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-
 import java.net.MalformedURLException;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.Naming;
+
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,27 +68,36 @@ class ClientImplementation implements ClientInterface {
 
     // menu
     private void menu() throws RemoteException {
-        this.setInventorySize();
+        try {
+            this.setInventorySize();
 
-        while(!this.playing) {
-            System.out.println(
-                    this.remote.menu()
-            );
+            while (!this.playing) {
+                System.out.println(
+                        this.remote.menu()
+                );
 
-            String action = this.enterAction().toLowerCase();
+                String action = this.enterAction().toLowerCase();
 
-            if (action.startsWith("create ")) {
-                this.createMUD(action);
+                if (action.startsWith("create ")) {
+                    this.createMUD(action);
+                }
+
+                else if (action.startsWith("join ")) {
+                    String game_name = action.replace("join ", "");
+                    this.joinMUDGame(game_name);
+                }
+
+                else if (action.equals("disconnect")) {
+                    this.disconnectServer();
+                }
+
+                else {
+                    System.out.println("Error, command " + action + " does not exist");
+                }
             }
-
-            if (action.startsWith("join ")) {
-                String game_name = action.replace("join ", "");
-                this.joinMUDGame(game_name);
-            }
-
-            if (action.equals("exit")) {
-                this.disconnectServer(); break;
-            }
+        }
+        catch(NullPointerException e) {
+            assert true;
         }
     }
 
@@ -100,10 +109,10 @@ class ClientImplementation implements ClientInterface {
             this.remote = (ServerInterface) Naming.lookup(url);
         }
         catch(NotBoundException e) {
-            System.err.println("Error, Server not bound: " + e.getMessage());
+            System.out.println("Error, Server not bound: " + e.getMessage());
         }
         catch(MalformedURLException e) {
-            System.err.println("Error, Malformed url: " + e.getMessage());
+            System.out.println("Error, Malformed url: " + e.getMessage());
         }
     }
 
@@ -113,7 +122,13 @@ class ClientImplementation implements ClientInterface {
         if (serverIsFull) {
             System.out.println("Server is currently full, you will be connected once there is an empty spot");
             while (!remote.playerJoinServer(this.username)) {
-                  assert true;
+                try {
+                    Thread.sleep(100);
+                }
+
+                catch (InterruptedException e) {
+                    return; // exits server if this happens
+                }
             }
         }
         System.out.println("Welcome to server " + this.hostname);
@@ -121,7 +136,7 @@ class ClientImplementation implements ClientInterface {
 
     private void playersServer() throws RemoteException {
         System.out.println(
-                this.remote.getServerPlayers()
+                this.remote.getServerPlayers(this.username)
         );
     }
 
@@ -131,7 +146,7 @@ class ClientImplementation implements ClientInterface {
         this.hostname = null;
         this.port = 0; // null
         this.username = null;
-        return; // complains if there's no return, although intelliJ does not like a return here ¯\_(ツ)_/¯
+        return; // Java complains if there's no return, although intelliJ does not like a return here ¯\_(ツ)_/¯
     }
 
 
@@ -140,7 +155,9 @@ class ClientImplementation implements ClientInterface {
         String game_name = action.replace("create ", "");
 
         if (this.remote.existsMUDGameInstance(game_name)) {
-            System.out.println("MUD " + game_name + " already exists"); }
+            System.out.println("Error, MUD game " + game_name + " already exists");
+        }
+
         else {
             String amount = this.enterAction("Maximum number of players allowed in " + game_name +": ");
             Integer num = 1;
@@ -148,7 +165,11 @@ class ClientImplementation implements ClientInterface {
                 num = Integer.parseInt(amount);
             }
             catch (NumberFormatException e) {
-                System.err.println("Error, that was not a number");
+                System.out.println("Error, that was not a number");
+                this.menu();
+            }
+            if (num < 1) {
+                System.out.println("Error, cannot have " + num + " as a limit" );
                 this.menu();
             }
 
@@ -262,7 +283,7 @@ class ClientImplementation implements ClientInterface {
     // game loop
     private void play() throws RemoteException {
         if(!this.remote.playerJoinMUD(this.username, this.mud_name)) {
-            System.out.println("Cannot joinServer the MUD game at the moment as it is full. Try again later");
+            System.out.println("Error, cannot join the MUD game at the moment as it is full. Try again later");
             menu();
         }
         else {
@@ -295,6 +316,11 @@ class ClientImplementation implements ClientInterface {
 
                 else if (action.matches("north|west|south|east")) {
                     this.move(action); }
+
+                else {
+                    System.out.println("Error, command " + action + " does not exist. Here is some help:");
+                    this.help();
+                }
             }
         }
     }
@@ -315,7 +341,6 @@ class ClientImplementation implements ClientInterface {
 
     private String enterAction(String msg) {
         System.out.print(msg);
-
         BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
 
         try {
@@ -339,9 +364,10 @@ class ClientImplementation implements ClientInterface {
         this.setName(this.enterAction("Enter your username: "));
 
         while (this.remote.playerExists(this.username)) {
-            System.out.println("A user with the name " + this.username + " already exists in the server");
+            System.out.println("Error, a user with the name " + this.username + " already exists in the server");
             this.setName(this.enterAction("Enter a different username: "));
         }
+
 
         this.joinServer(); // actually joinServer the connected server after basic verification
 

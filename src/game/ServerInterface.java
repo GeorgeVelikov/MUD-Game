@@ -7,12 +7,12 @@ import java.util.List;
 
 
 public interface ServerInterface extends Remote {
-    void notification(String msg) throws RemoteException;
+    void notification(String msg, boolean error) throws RemoteException;
 
     // always inverted
     boolean playerJoinServer(String username) throws RemoteException;
     void playerQuitServer(String username) throws RemoteException;
-    String getServerPlayers() throws RemoteException;
+    String getServerPlayers(String username) throws RemoteException;
 
     boolean playerJoinMUD(String username, String mud_name) throws RemoteException;
     void playerQuitMUD(String location, String username, List<String> inventory, String mud_name) throws RemoteException;

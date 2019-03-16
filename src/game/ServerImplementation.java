@@ -137,15 +137,24 @@ public class ServerImplementation implements ServerInterface {
                 this.serverPlayersInQue.remove(username);
             }
             this.players.add(username);
-            this.notification("\tUser " + username + " has joined the server. Server capacity " +
-                    this.players.size() + "/" + this.serverMaxPlayers,false);
+
+            String msg = "\tUser " + username + " has joined the server. Server capacity " +
+                    this.players.size() + "/" + this.serverMaxPlayers;
+
+            Integer playersInQue = this.serverPlayersInQue.size();
+            if (playersInQue > 0) {
+                msg += ". There are currently " + playersInQue + " player(s) in the que waiting to join the server";
+            }
+            this.notification(msg,false);
             return true;
         }
 
         else {
             if (!this.serverPlayersInQue.contains(username)) {
                 this.serverPlayersInQue.add(username);
-                this.notification("\tUser " + username + " has attempted to join the server. Server is full", true);
+                this.notification("\tUser " + username + " has attempted to join the server. " +
+                        "Server is full and there are " + this.serverPlayersInQue.size() + " player(s) in the que " +
+                        "waiting to join the server" , true);
             }
             return false;
         }
@@ -154,8 +163,12 @@ public class ServerImplementation implements ServerInterface {
 
     public void playerQuitServer(String username) {
         this.players.remove(username);
-        this.notification("\tUser " + username + " has left the server. Server capacity " +
-                this.players.size() + "/" + this.serverMaxPlayers, false);
+        this.serverPlayersInQue.remove(username);
+
+        String msg = "\tUser " + username + " has left the server. Server capacity " +
+                this.players.size() + "/" + this.serverMaxPlayers;
+
+        this.notification(msg, false);
     }
 
     public boolean playerJoinMUD(String username, String mud_name) {
@@ -163,7 +176,7 @@ public class ServerImplementation implements ServerInterface {
             try {
                 Thread.sleep(100); // waits until it's free
             } catch (InterruptedException e) {
-                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+                this.notification("\tError, something has gone terribly wrong: " + e.getMessage(), true);
             }
         }
 
@@ -191,7 +204,7 @@ public class ServerImplementation implements ServerInterface {
              try {
                  Thread.sleep(100); // waits until it's free
              } catch (InterruptedException e) {
-                 this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+                 this.notification("\tError, something has gone terribly wrong: " + e.getMessage(), true);
              }
          }
 
@@ -210,7 +223,7 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsNotUsed();
 
-        this.notification("\n" + username + " has quit MUD game " + mud_name,false);
+        this.notification("\t" + username + " has quit MUD game " + mud_name,false);
     }
 
     public String playerLook(String location, String mud_name) {
@@ -218,7 +231,7 @@ public class ServerImplementation implements ServerInterface {
             try {
                 Thread.sleep(100); // waits until it's free
             } catch (InterruptedException e) {
-                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+                this.notification("\tError, something has gone terribly wrong: " + e.getMessage(), true);
             }
         }
 
@@ -237,7 +250,7 @@ public class ServerImplementation implements ServerInterface {
             try {
                 Thread.sleep(100); // waits until it's free
             } catch (InterruptedException e) {
-                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+                this.notification("\tError, something has gone terribly wrong: " + e.getMessage(), true);
             }
         }
 
@@ -256,7 +269,7 @@ public class ServerImplementation implements ServerInterface {
             try {
                 Thread.sleep(100); // waits until it's free
             } catch (InterruptedException e) {
-                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+                this.notification("\tError, something has gone terribly wrong: " + e.getMessage(), true);
             }
         }
 
@@ -318,11 +331,8 @@ public class ServerImplementation implements ServerInterface {
 
     }
 
-    public String createMUDGameInstance(String mud_name, Integer player_max) {
-        // MUD game limit on server
-        Integer game_limit = 4;
-
-        if (this.allMUDGames.size() < game_limit) {
+    public String createMUDGameInstance(String mud_name, String username, Integer player_max) {
+        if (this.allMUDGames.size() < this.maxMUDGames) {
             // might want to eventually allow players to launch their own edges
             String edges = "./args/mymud.edg";
             String messages = "./args/mymud.msg";
@@ -335,7 +345,26 @@ public class ServerImplementation implements ServerInterface {
             return "Game " + mud_name + " created successfully";
         }
         else {
+            this.notification("\tUser " + username + " has attempted to create MUD game " + mud_name +
+                    ". MUD game slots on the server are full " +
+                    this.allMUDGames.size() + "/" + this.maxMUDGames, true);
             return "Game limit on server reached";
+        }
+    }
+    // creates "default" server, private because only server will ever need it
+    private void createMUDGameInstance(Integer player_max) {
+        if (this.allMUDGames.size() < this.maxMUDGames) {
+            // might want to eventually allow players to launch their own edges
+            String edges = "./args/mymud.edg";
+            String messages = "./args/mymud.msg";
+            String things = "./args/mymud.thg";
+
+            this.notification("\tMUD game of the name default has been created", false);
+            MUD mud_map = new MUD(edges, messages, things, player_max);
+            this.allMUDGames.put("default", mud_map);
+        }
+        else {
+            this.notification("\tNo MUD game slots available in the server", true);
         }
     }
 
@@ -346,7 +375,7 @@ public class ServerImplementation implements ServerInterface {
             try {
                 Thread.sleep(100); // waits until it's free
             } catch (InterruptedException e) {
-                this.notification("Error, something has gone terribly wrong: " + e.getMessage(), true);
+                this.notification("\tError, something has gone terribly wrong: " + e.getMessage(), true);
             }
         }
         this.setServerIsUsed();
@@ -415,7 +444,7 @@ public class ServerImplementation implements ServerInterface {
          * create a default mud instance as to always have a game in it
          * even if you remove it, the game will handle it and show a special message
         */
-        this.createMUDGameInstance("default", limitPlayers);
+        this.createMUDGameInstance(limitPlayers);
 
         /*
          * Most of the server functions have locks. However I did c/p a lot of times

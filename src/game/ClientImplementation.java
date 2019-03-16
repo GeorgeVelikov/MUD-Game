@@ -173,7 +173,7 @@ class ClientImplementation implements ClientInterface {
                 this.menu();
             }
 
-            System.out.println(this.remote.createMUDGameInstance(game_name, num ));
+            System.out.println(this.remote.createMUDGameInstance(game_name, this.username, num ));
         }
     }
 
@@ -301,26 +301,16 @@ class ClientImplementation implements ClientInterface {
                 // sanitize action text
                 action = enterAction().toLowerCase().trim();
 
-                switch (action) {
-                    case "help":            this.help();                            break;
-                    case "quit":            this.quitMUDGame();                     break;
-                    case "look":            this.look();                            break;
-                    case "inventory":       this.checkInventory();                  break;
-                    case "players game":    this.playersMUD();                      break;
-                    case "players server":  this.playersServer();                   break;
-                    case "players":         this.playersServer(); this.playersMUD();break;
-                }
-
-                if (action.startsWith("take ")) {
-                    this.take(action.replace("take ", "")); }
-
-                else if (action.matches("north|west|south|east")) {
-                    this.move(action); }
-
-                else {
-                    System.out.println("Error, command " + action + " does not exist. Here is some help:");
-                    this.help();
-                }
+                if (action.equals("help")) { this.help(); }
+                else if (action.equals("quit")) { this.quitMUDGame(); }
+                else if (action.equals("look")) { this.look(); }
+                else if (action.equals("inventory")) { this.checkInventory(); }
+                else if (action.equals("players game")) { this.playersMUD(); }
+                else if (action.equals("players server")) { this.playersServer(); }
+                else if (action.equals("players")) { this.playersServer(); this.playersMUD(); }
+                else if (action.startsWith("take ")) { this.take(action.replace("take ", "")); }
+                else if (action.matches("north|west|south|east")) { this.move(action); }
+                else { System.out.println("Error, command " + action + " does not exist"); this.help(); }
             }
         }
     }

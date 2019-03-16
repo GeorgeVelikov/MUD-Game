@@ -416,5 +416,12 @@ public class ServerImplementation implements ServerInterface {
          * even if you remove it, the game will handle it and show a special message
         */
         this.createMUDGameInstance("default", limitPlayers);
+
+        /*
+         * Most of the server functions have locks. However I did c/p a lot of times
+         * and definitely could have had around 50-60 less lines than what I have now.
+         * I could not quite figure out a better way in time
+         * I needed to make multiple lockThis(args) functions to accommodate the various locked parts
+         */
     }
 }

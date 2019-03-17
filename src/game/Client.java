@@ -23,6 +23,12 @@ public class Client {
             client = new ClientImplementation(hostname, port);
             Runtime.getRuntime().addShutdownHook(
                     new Thread(() -> {
+                        /*
+                         * I had some difficulties making sure this worked since I'm using IntelliJ and the
+                         * signals sent from the "STOP" function in Intellij's console is different from the
+                         * one of Win/Linux Ctrl-C SIGINT. To my knowledge this should work fine now and it seems
+                         * to work with Intellij's Ctrl-D EOF signal
+                         */
                         try { client.abort(); }
                         catch (RemoteException e) {
                             System.err.println("Error, severe connection error: " + e.getMessage());

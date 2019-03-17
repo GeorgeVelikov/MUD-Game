@@ -293,7 +293,7 @@ public class ServerImplementation implements ServerInterface {
 
         if (userHasSpace) {
             this.setServerIsNotUsed();
-            return true;
+            return false;
         }
 
         else {

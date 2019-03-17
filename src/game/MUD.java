@@ -266,15 +266,6 @@ public class MUD {
         MUDVertex v = getVertex(loc);
 
         if (v._things.contains(thing)) {
-            String msg = "Evidence of a ";
-
-            if (thing.endsWith("s")) {
-                msg = msg.replace("a ", "");
-            }
-
-            if (!v._things.contains(msg)) {
-                this.createThing(loc, msg + thing + " residing here before");
-            }
             v._things.remove(thing);
         }
     }

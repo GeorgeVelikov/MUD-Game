@@ -21,7 +21,7 @@ class ClientImplementation implements ClientInterface {
     private int port;
 
     // game name
-    private String mud_name;
+    private String mud_name = "";
 
     // user data
     private boolean playing;
@@ -56,7 +56,7 @@ class ClientImplementation implements ClientInterface {
          * I would have treated MUDs like "zones" and servers as a "world", users can jump in and out of zones,
          * and find items planed through out the world. Honestly if this was a software project (making a game)
          * I would have went full blown and went for some sort of dungeon crawler (with graphics, of course).
-        */
+         */
         this.inventory = this.remote.setPlayerInventory();
     }
 
@@ -80,23 +80,16 @@ class ClientImplementation implements ClientInterface {
 
                 if (action.startsWith("create ")) {
                     this.createMUD(action);
-                }
-
-                else if (action.startsWith("join ")) {
+                } else if (action.startsWith("join ")) {
                     String game_name = action.replace("join ", "");
                     this.joinMUDGame(game_name);
-                }
-
-                else if (action.equals("disconnect")) {
+                } else if (action.equals("disconnect")) {
                     this.disconnectServer();
-                }
-
-                else {
+                } else {
                     System.out.println("Error, command " + action + " does not exist");
                 }
             }
-        }
-        catch(NullPointerException e) {
+        } catch (NullPointerException e) {
             assert true;
         }
     }
@@ -107,11 +100,9 @@ class ClientImplementation implements ClientInterface {
         try {
             String url = "rmi://" + this.hostname + ":" + this.port + "/mud";
             this.remote = (ServerInterface) Naming.lookup(url);
-        }
-        catch(NotBoundException e) {
+        } catch (NotBoundException e) {
             System.out.println("Error, Server not bound: " + e.getMessage());
-        }
-        catch(MalformedURLException e) {
+        } catch (MalformedURLException e) {
             System.out.println("Error, Malformed url: " + e.getMessage());
         }
     }
@@ -121,18 +112,16 @@ class ClientImplementation implements ClientInterface {
 
         if (serverIsFull) {
             System.out.println("Server is currently full, you will be connected once there is an empty spot");
-            while (!remote.playerJoinServer(this.username)) {
-                try {
-                    Thread.sleep(100);
-                }
 
-                catch (InterruptedException e) {
-                    return; // exits server if this happens
-                }
+            while (!remote.playerJoinServer(username)) {
+                try { Thread.sleep(100); }
+                catch (InterruptedException e) { return; /* exits server if this happens */ }
             }
         }
-        System.out.println("Welcome to server " + this.hostname);
+
+        System.out.println("Welcome to server "+this.hostname);
     }
+
 
     private void playersServer() throws RemoteException {
         System.out.println(
@@ -208,6 +197,13 @@ class ClientImplementation implements ClientInterface {
         this.mud_name = "";
 
         this.menu();
+    }
+
+    public void abort() throws RemoteException {
+        if (!this.mud_name.equals("")) {
+            this.quitMUDGame();
+        }
+        this.disconnectServer();
     }
 
 
@@ -310,6 +306,7 @@ class ClientImplementation implements ClientInterface {
             this.setLocation(remote.setPlayerStartLocation(this.username, this.mud_name));
 
             while(this.playing) {
+
                 // sanitize action text
                 action = enterAction().toLowerCase().trim();
 

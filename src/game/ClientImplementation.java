@@ -364,21 +364,24 @@ class ClientImplementation implements ClientInterface {
     ClientImplementation(String _hostname, int _port) throws RemoteException {
         System.setProperty("java.security.policy", ".policy");
         System.setSecurityManager(new SecurityManager());
-        this.setHostname(_hostname);
-        this.setPort(_port);
+        try {
+            this.setHostname(_hostname);
+            this.setPort(_port);
 
-        this.connectServer(); // connects to the rmi server
+            this.connectServer(); // connects to the rmi server
 
-        this.setName(this.enterAction("Enter your username: "));
+            this.setName(this.enterAction("Enter your username: "));
 
-        while (this.remote.playerExists(this.username)) {
-            System.out.println("Error, a user with the name " + this.username + " already exists in the server");
-            this.setName(this.enterAction("Enter a different username: "));
+            while (this.remote.playerExists(this.username)) {
+                System.out.println("Error, a user with the name " + this.username + " already exists in the server");
+                this.setName(this.enterAction("Enter a different username: "));
+            }
+
+
+            this.joinServer(); // actually joinServer the connected server after basic verification
+
+            this.menu(); // loads up the game menu
         }
-
-
-        this.joinServer(); // actually joinServer the connected server after basic verification
-
-        this.menu(); // loads up the game menu
+        catch (NullPointerException e) { this.abort(); }
     }
 }

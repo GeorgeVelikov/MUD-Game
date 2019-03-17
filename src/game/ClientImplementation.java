@@ -2,6 +2,7 @@ package game;
 
 import java.net.MalformedURLException;
 
+import java.rmi.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.Naming;
@@ -71,27 +72,29 @@ class ClientImplementation implements ClientInterface {
         try {
             this.setInventorySize();
 
-            while (!this.playing) {
-                System.out.println(
-                        this.remote.menu()
-                );
+            try {
+                while (!this.playing) {
+                    System.out.println(
+                            this.remote.menu()
+                    );
 
-                String action = this.enterAction().toLowerCase().trim();
+                    String action = this.enterAction().toLowerCase().trim();
 
-                if (action.startsWith("create ")) {
-                    this.createMUD(action);
-                } else if (action.startsWith("join ")) {
-                    String game_name = action.replace("join ", "");
-                    this.joinMUDGame(game_name);
-                } else if (action.equals("disconnect")) {
-                    this.disconnectServer();
-                } else {
-                    System.out.println("Error, command " + action + " does not exist");
+                    if (action.startsWith("create ")) {
+                        this.createMUD(action);
+                    } else if (action.startsWith("join ")) {
+                        String game_name = action.replace("join ", "");
+                        this.joinMUDGame(game_name);
+                    } else if (action.equals("disconnect")) {
+                        this.disconnectServer();
+                    } else {
+                        System.out.println("Error, command " + action + " does not exist");
+                    }
                 }
             }
-        } catch (NullPointerException e) {
-            assert true;
+            catch(ConnectException e) { this.abort(); }
         }
+        catch (NullPointerException e) { assert true; /* do nothing */ }
     }
 
 
@@ -135,7 +138,7 @@ class ClientImplementation implements ClientInterface {
         this.hostname = null;
         this.port = 0; // null
         this.username = null;
-        return; // Java complains if there's no return, although intelliJ does not like a return here ¯\_(ツ)_/¯
+        //return; // Java complains if there's no return, although intelliJ does not like a return here ¯\_(ツ)_/¯
     }
 
 
@@ -200,10 +203,14 @@ class ClientImplementation implements ClientInterface {
     }
 
     public void abort() throws RemoteException {
-        if (!this.mud_name.equals("")) {
-            this.quitMUDGame();
+        // check if we're connected, 0 is an invalid port number
+        if (this.port != 0) {
+            if (!this.mud_name.equals("")) {
+                this.quitMUDGame();
+            }
+            this.disconnectServer();
+            System.err.println("User aborted. Shutting application");
         }
-        this.disconnectServer();
     }
 
 
@@ -305,22 +312,24 @@ class ClientImplementation implements ClientInterface {
             // set starting loc
             this.setLocation(remote.setPlayerStartLocation(this.username, this.mud_name));
 
-            while(this.playing) {
+            try {
+                while(this.playing) {
+                    // sanitize action text
+                    action = enterAction().toLowerCase().trim();
 
-                // sanitize action text
-                action = enterAction().toLowerCase().trim();
-
-                if (action.equals("help")) { this.help(); }
-                else if (action.equals("quit")) { this.quitMUDGame(); }
-                else if (action.equals("look")) { this.look(); }
-                else if (action.equals("inventory")) { this.checkInventory(); }
-                else if (action.equals("players game")) { this.playersMUD(); }
-                else if (action.equals("players server")) { this.playersServer(); }
-                else if (action.equals("players")) { this.playersServer(); this.playersMUD(); }
-                else if (action.startsWith("take ")) { this.take(action.replace("take ", "")); }
-                else if (action.matches("north|west|south|east")) { this.move(action); }
-                else { System.out.println("Error, command " + action + " does not exist"); this.help(); }
+                    if (action.equals("help")) { this.help(); }
+                    else if (action.equals("quit")) { this.quitMUDGame(); }
+                    else if (action.equals("look")) { this.look(); }
+                    else if (action.equals("inventory")) { this.checkInventory(); }
+                    else if (action.equals("players game")) { this.playersMUD(); }
+                    else if (action.equals("players server")) { this.playersServer(); }
+                    else if (action.equals("players")) { this.playersServer(); this.playersMUD(); }
+                    else if (action.startsWith("take ")) { this.take(action.replace("take ", "")); }
+                    else if (action.matches("north|west|south|east")) { this.move(action); }
+                    else { System.out.println("Error, command " + action + " does not exist"); this.help(); }
+                }
             }
+            catch (ConnectException e) { this.abort(); }
         }
     }
 

@@ -20,7 +20,7 @@ public class Client {
         ClientImplementation client;
 
         try {
-           client = new ClientImplementation(hostname, port);
+            client = new ClientImplementation(hostname, port);
             Runtime.getRuntime().addShutdownHook(
                     new Thread(() -> {
                         try { client.abort(); }

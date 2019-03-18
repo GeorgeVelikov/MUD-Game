@@ -32,7 +32,7 @@ class ClientImplementation implements ClientInterface, Serializable {
     private List<String> inventory = new ArrayList<>();
 
 
-    // setters
+    // getters
     public String getName(){
 
         return this.username;
@@ -54,6 +54,7 @@ class ClientImplementation implements ClientInterface, Serializable {
     }
 
 
+    // setters
     private void setName(String name) {
 
         this.username = name.replace(" ", "");

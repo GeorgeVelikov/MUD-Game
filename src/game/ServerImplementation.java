@@ -52,14 +52,14 @@ public class ServerImplementation implements ServerInterface {
 
 
     // server verifications & notifications
-    public boolean playerExists(String name) {
+    public boolean playerExists(ClientImplementation client) {
 
-        return this.players.contains(name);
+        return this.players.contains(client.getName());
     }
 
-    public boolean existsMUDGameInstance(String mud_name) {
+    public boolean existsMUDGameInstance(String game_name) {
 
-        return this.allMUDGames.keySet().contains(mud_name);
+        return this.allMUDGames.keySet().contains(game_name);
     }
 
     public boolean existsMUDGameSlots() {
@@ -83,18 +83,18 @@ public class ServerImplementation implements ServerInterface {
 
 
     // getters
-    public String getServerPlayers(String username) {
+    public String getServerPlayers(ClientImplementation client) {
         String msg = "These players are online in server " + this.serverName + ": ";
 
         for(String user : this.players) {
-            if (user.equals(username))
+            if (user.equals(client.getName()))
                 user = "<You>";
             msg = msg.concat(user + ", ");
         }
         return msg;
     }
 
-    public String getMUDPlayers(String username, String mud_name) {
+    public String getMUDPlayers(ClientImplementation client) {
         while (this.serverUsed) {
             try {
                 Thread.sleep(100); // waits until it's free
@@ -105,11 +105,11 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsUsed();
 
-        MUD currentMUD = this.getCurrentMUD(mud_name);
+        MUD currentMUD = this.getCurrentMUD(client.getMUDName());
         String msg = "Players currently in this MUD: ";
 
         for(String user : currentMUD.getMUDPlayers()) {
-            if (user.equals(username))
+            if (user.equals(client.getName()))
                 user = "<You>";
             msg = msg.concat(user + ", ");
         }
@@ -131,19 +131,19 @@ public class ServerImplementation implements ServerInterface {
 
 
     // players ping the server to do something
-    public boolean playerJoinServer(String username) {
+    public boolean playerJoinServer(ClientImplementation client) {
         /* Not using a proper que right now it's kind of random as the person to ping the server after
          * a 100ms sleep first gets the spot (better than a stack, but still kind of based on luck, which can be worse)
          * If I were to properly implement this, i'd make a player class and have a List<Player> que
          * Which the server will control here
         */
         if (this.players.size() < this.serverMaxPlayers) {
-            if (this.serverPlayersInQue.contains(username)) {
-                this.serverPlayersInQue.remove(username);
+            if (this.serverPlayersInQue.contains(client.getName())) {
+                this.serverPlayersInQue.remove(client.getName());
             }
-            this.players.add(username);
+            this.players.add(client.getName());
 
-            String msg = "\tUser " + username + " has joined the server. Server capacity " +
+            String msg = "\tUser " + client.getName() + " has joined the server. Server capacity " +
                     this.players.size() + "/" + this.serverMaxPlayers;
 
             Integer playersInQue = this.serverPlayersInQue.size();
@@ -155,9 +155,9 @@ public class ServerImplementation implements ServerInterface {
         }
 
         else {
-            if (!this.serverPlayersInQue.contains(username)) {
-                this.serverPlayersInQue.add(username);
-                this.notification("\tUser " + username + " has attempted to join the server. " +
+            if (!this.serverPlayersInQue.contains(client.getName())) {
+                this.serverPlayersInQue.add(client.getName());
+                this.notification("\tUser " + client.getName() + " has attempted to join the server. " +
                         "Server is full and there are " + this.serverPlayersInQue.size() + " player(s) in the que " +
                         "waiting to join the server" , true);
             }
@@ -166,17 +166,17 @@ public class ServerImplementation implements ServerInterface {
 
     }
 
-    public void playerQuitServer(String username) {
-        this.players.remove(username);
-        this.serverPlayersInQue.remove(username);
+    public void playerQuitServer(ClientImplementation client) {
+        this.players.remove(client.getName());
+        this.serverPlayersInQue.remove(client.getName());
 
-        String msg = "\tUser " + username + " has left the server. Server capacity " +
+        String msg = "\tUser " + client.getName() + " has left the server. Server capacity " +
                 this.players.size() + "/" + this.serverMaxPlayers;
 
         this.notification(msg, false);
     }
 
-    public boolean playerJoinMUD(String username, String mud_name) {
+    public boolean playerJoinMUD(ClientImplementation client) {
         while (this.serverUsed) {
             try {
                 Thread.sleep(100); // waits until it's free
@@ -187,24 +187,24 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsUsed();
 
-        MUD currentMUD = this.getCurrentMUD(mud_name);
+        MUD currentMUD = this.getCurrentMUD(client.getMUDName());
 
-        if (currentMUD.addMUDPlayer(username)) {
-            this.notification("\tUser " + username + " has joined MUD game " + mud_name + " " +
+        if (currentMUD.addMUDPlayer(client.getName())) {
+            this.notification("\tUser " + client.getName() + " has joined MUD game " + client.getMUDName() + " " +
                     currentMUD.getMUDPlayers().size() + "/" + currentMUD.getMUDPlayerLimit(), false);
             this.setServerIsNotUsed();
             return true;
 
         }
         else {
-            this.notification("\tUser " + username + " attempted to join MUD game " + mud_name + " " +
+            this.notification("\tUser " + client.getName() + " attempted to join MUD game " + client.getMUDName() + " " +
                     currentMUD.getMUDPlayers().size() + "/" + currentMUD.getMUDPlayerLimit(), true);
             this.setServerIsNotUsed();
             return false;
         }
     }
 
-    public void playerQuitMUD(String location, String username, List<String> inventory, String mud_name) {
+    public void playerQuitMUD(ClientImplementation client) {
          while (this.serverUsed) {
              try {
                  Thread.sleep(100); // waits until it's free
@@ -215,23 +215,23 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsUsed();
 
-        MUD currentMUD = this.getCurrentMUD(mud_name);
-        currentMUD.removePlayer(location, username);
-        currentMUD.removeMUDPlayer(username);
+        MUD currentMUD = this.getCurrentMUD(client.getMUDName());
+        currentMUD.removePlayer(client.getLocation(), client.getName());
+        currentMUD.removeMUDPlayer(client.getName());
 
-        for(String item : inventory) {
+        for(String item : client.getInventory()) {
             if (!item.equals("[ ]")) {
                 item = item.replace("[", "").replace("]", "");
-                currentMUD.addThing(location, item);
+                currentMUD.addThing(client.getLocation(), item);
             }
         }
 
         this.setServerIsNotUsed();
 
-        this.notification("\t" + username + " has quit MUD game " + mud_name,false);
+        this.notification("\t" + client.getName() + " has quit MUD game " + client.getMUDName(),false);
     }
 
-    public String playerLook(String location, String mud_name) {
+    public String playerLook(ClientImplementation client) {
         while (this.serverUsed) {
             try {
                 Thread.sleep(100); // waits until it's free
@@ -242,34 +242,15 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsUsed();
 
-        MUD currentMUD = this.getCurrentMUD(mud_name);
-        String msg = currentMUD.locationInfo(location);
-
-        this.setServerIsNotUsed();
-
-        return msg;
-    }
-
-    public String playerMove(String user_loc, String user_move, String user_name, String mud_name) {
-        while (this.serverUsed) {
-            try {
-                Thread.sleep(100); // waits until it's free
-            } catch (InterruptedException e) {
-                this.notification("\tError, something has gone terribly wrong: " + e.getMessage(), true);
-            }
-        }
-
-        this.setServerIsUsed();
-
-        MUD currentMUD = this.getCurrentMUD(mud_name);
-        String msg = currentMUD.movePlayer(user_loc, user_move, user_name);
+        MUD currentMUD = this.getCurrentMUD(client.getMUDName());
+        String msg = currentMUD.locationInfo(client.getLocation());
 
         this.setServerIsNotUsed();
 
         return msg;
     }
 
-    public boolean playerTake(String loc, String item, List<String> inventory, String mud_name) {
+    public String playerMove(String user_move, ClientImplementation client) {
         while (this.serverUsed) {
             try {
                 Thread.sleep(100); // waits until it's free
@@ -280,13 +261,32 @@ public class ServerImplementation implements ServerInterface {
 
         this.setServerIsUsed();
 
-        MUD currentMUD = this.getCurrentMUD(mud_name);
+        MUD currentMUD = this.getCurrentMUD(client.getMUDName());
+        String msg = currentMUD.movePlayer(client.getLocation(), user_move, client.getName());
 
-        boolean userHasSpace = inventory.contains("[ ]");
-        boolean itemExists = currentMUD.takeItem(loc, item);
+        this.setServerIsNotUsed();
+
+        return msg;
+    }
+
+    public boolean playerTake(String item, ClientImplementation client) {
+        while (this.serverUsed) {
+            try {
+                Thread.sleep(100); // waits until it's free
+            } catch (InterruptedException e) {
+                this.notification("\tError, something has gone terribly wrong: " + e.getMessage(), true);
+            }
+        }
+
+        this.setServerIsUsed();
+
+        MUD currentMUD = this.getCurrentMUD(client.getMUDName());
+
+        boolean userHasSpace = client.getInventory().contains("[ ]");
+        boolean itemExists = currentMUD.takeItem(client.getLocation(), item);
 
         if (itemExists && userHasSpace) {
-            currentMUD.delThing(loc, item);
+            currentMUD.delThing(client.getLocation(), item);
             this.setServerIsNotUsed();
             return true;
         }
@@ -336,21 +336,21 @@ public class ServerImplementation implements ServerInterface {
 
     }
 
-    public String createMUDGameInstance(String mud_name, String username, Integer player_max) {
+    public String createMUDGameInstance(String mud_game, Integer player_max, ClientImplementation client) {
         if (this.allMUDGames.size() < this.maxMUDGames) {
             // might want to eventually allow players to launch their own edges
             String edges = "./args/mymud.edg";
             String messages = "./args/mymud.msg";
             String things = "./args/mymud.thg";
 
-            this.notification("\tMUD game of the name " + mud_name + " has been created", false);
+            this.notification("\tMUD game of the name " + mud_game + " has been created", false);
             MUD mud_map = new MUD(edges, messages, things, player_max);
-            this.allMUDGames.put(mud_name, mud_map);
+            this.allMUDGames.put(mud_game, mud_map);
 
-            return "Game " + mud_name + " created successfully";
+            return "Game " + client.getMUDName() + " created successfully";
         }
         else {
-            this.notification("\tUser " + username + " has attempted to create MUD game " + mud_name +
+            this.notification("\tUser " + client.getName() + " has attempted to create MUD game " + mud_game +
                     ". MUD game slots on the server are full " +
                     this.allMUDGames.size() + "/" + this.maxMUDGames, true);
             return "Game limit on server reached";
@@ -375,7 +375,7 @@ public class ServerImplementation implements ServerInterface {
 
 
     // setters
-    public String setPlayerStartLocation(String username, String mud_name) {
+    public String setPlayerStartLocation(ClientImplementation client) {
         while (this.serverUsed) {
             try {
                 Thread.sleep(100); // waits until it's free
@@ -385,8 +385,8 @@ public class ServerImplementation implements ServerInterface {
         }
         this.setServerIsUsed();
 
-        MUD currentMUD = this.getCurrentMUD(mud_name);
-        currentMUD.addPlayer(currentMUD.startLocation(), username);
+        MUD currentMUD = this.getCurrentMUD(client.getMUDName());
+        currentMUD.addPlayer(currentMUD.startLocation(), client.getName());
         String msg = currentMUD.startLocation();
 
         this.setServerIsNotUsed();

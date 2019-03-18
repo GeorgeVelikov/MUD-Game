@@ -6,7 +6,7 @@ import java.rmi.RemoteException;
 public class Client {
     public static void main(String[] args) throws RemoteException {
         String hostname = "";
-        int port = 0;
+        Integer port = 0;
 
         try {
             hostname = args[0];

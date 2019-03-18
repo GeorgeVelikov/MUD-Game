@@ -1,5 +1,6 @@
 package game;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 
 import java.rmi.ConnectException;
@@ -15,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-class ClientImplementation implements ClientInterface {
+class ClientImplementation implements ClientInterface, Serializable {
     // data connected to the server
     private ServerInterface remote;
     private String hostname;
@@ -32,6 +33,27 @@ class ClientImplementation implements ClientInterface {
 
 
     // setters
+    public String getName(){
+
+        return this.username;
+    }
+
+    public String getLocation() {
+
+        return this.location;
+    }
+
+    public List<String> getInventory() {
+
+        return this.inventory;
+    }
+
+    public String getMUDName() {
+
+        return this.mud_name;
+    }
+
+
     private void setName(String name) {
 
         this.username = name.replace(" ", "");
@@ -111,12 +133,12 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void joinServer() throws RemoteException {
-        boolean serverIsFull = !remote.playerJoinServer(this.username);
+        boolean serverIsFull = !remote.playerJoinServer(this);
 
         if (serverIsFull) {
             System.out.println("Server is currently full, you will be connected once there is an empty spot");
 
-            while (!remote.playerJoinServer(username)) {
+            while (!remote.playerJoinServer(this)) {
                 try { Thread.sleep(100); }
                 catch (InterruptedException e) { return; /* exits server if this happens */ }
             }
@@ -128,12 +150,12 @@ class ClientImplementation implements ClientInterface {
 
     private void playersServer() throws RemoteException {
         System.out.println(
-                this.remote.getServerPlayers(this.username)
+                this.remote.getServerPlayers(this)
         );
     }
 
     private void disconnectServer() throws RemoteException {
-        this.remote.playerQuitServer(this.username);
+        this.remote.playerQuitServer(this);
         this.remote = null;
         this.hostname = null;
         this.port = 0; // null
@@ -169,7 +191,7 @@ class ClientImplementation implements ClientInterface {
                 this.menu();
             }
 
-            System.out.println(this.remote.createMUDGameInstance(game_name, this.username, num ));
+            System.out.println(this.remote.createMUDGameInstance(game_name, num, this));
         }
     }
 
@@ -188,12 +210,12 @@ class ClientImplementation implements ClientInterface {
 
     private void playersMUD() throws RemoteException {
         System.out.println(
-                this.remote.getMUDPlayers(this.username, this.mud_name)
+                this.remote.getMUDPlayers(this)
         );
     }
 
     private void quitMUDGame() throws RemoteException {
-        this.remote.playerQuitMUD(this.location, this.username, this.inventory, this.mud_name);
+        this.remote.playerQuitMUD(this);
         this.playing = false;
 
         System.out.println("You have quitMUDGame " + this.mud_name);
@@ -217,7 +239,7 @@ class ClientImplementation implements ClientInterface {
     // game helpers & prompts for server to calculate user actions
     private void move(String direction) throws RemoteException {
         this.setLocation(
-                remote.playerMove(this.location, direction, this.username, this.mud_name)
+                remote.playerMove( direction, this)
         );
 
         System.out.print("Your new location is ");
@@ -225,7 +247,7 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void look() throws RemoteException {
-        String users = this.remote.playerLook(this.location, this.mud_name);
+        String users = this.remote.playerLook(this);
         users = users.replaceAll("\\b"+this.username+"\\b", "<You>");
 
         System.out.println(
@@ -234,7 +256,7 @@ class ClientImplementation implements ClientInterface {
     }
 
     private void take(String item) throws RemoteException {
-        boolean item_exists = this.remote.playerTake(this.location, item, this.inventory, this.mud_name);
+        boolean item_exists = this.remote.playerTake(item, this);
 
         if(item_exists) {
             for(int i=0; i<this.inventory.size(); i++){
@@ -297,7 +319,7 @@ class ClientImplementation implements ClientInterface {
 
     // game loop
     private void play() throws RemoteException {
-        if(!this.remote.playerJoinMUD(this.username, this.mud_name)) {
+        if(!this.remote.playerJoinMUD(this)) {
             System.out.println("Error, cannot join the MUD game at the moment as it is full. Try again later");
             menu();
         }
@@ -310,7 +332,7 @@ class ClientImplementation implements ClientInterface {
             String action;
 
             // set starting loc
-            this.setLocation(remote.setPlayerStartLocation(this.username, this.mud_name));
+            this.setLocation(remote.setPlayerStartLocation(this));
 
             try {
                 while(this.playing) {
@@ -372,7 +394,7 @@ class ClientImplementation implements ClientInterface {
 
             this.setName(this.enterAction("Enter your username: "));
 
-            while (this.remote.playerExists(this.username)) {
+            while (this.remote.playerExists(this)) {
                 System.out.println("Error, a user with the name " + this.username + " already exists in the server");
                 this.setName(this.enterAction("Enter a different username: "));
             }

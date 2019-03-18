@@ -16,6 +16,6 @@ public class Server {
             System.err.println("Error, illegal arguments: " + e.getMessage() + "\n <rmiregistry port> <server port>");
         }
 
-        new ServerImplementation(port_registry, port_server, 4, 4, 2);
+        new ServerImplementation(port_registry, port_server, 2, 2, 2);
     }
 }
